@@ -30,10 +30,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -57,7 +53,7 @@
       <div>
         <span class="openpill">Ouvert aujourd'hui · 9h–20h</span>
         <h1>Toute l'Afrique <em>au cœur</em> de Cholet.</h1>
-        <p class="lead">Produits africains &amp; exotiques, frais, surgelés, épices, cosmétiques au karité  et votre service MoneyGram.</p>
+        <p class="lead">Produits africains &amp; exotiques, frais, surgelés, épices, cosmétiques au karité et votre service MoneyGram.</p>
         <div class="cta">
           <a href="#produits" class="btn">Découvrir nos produits</a>
           <a href="#services" class="btn ghost">Nos services</a>
@@ -174,7 +170,7 @@
         Magasin africain ouvert du lundi au samedi de 9h à 20h et le dimanche matin.
       </p>
       <div class="copyright">
-        <span>© 2026 Gamme Market — Tous droits réservés</span>
+        <span>© 2026 Gamme Market - Tous droits réservés</span>
         <span>Mentions légales · Politique de confidentialité</span>
       </div>
     </div>
@@ -230,6 +226,11 @@
     renderFilters(); renderGrid();
   }
   loadProducts();
+
+  // Bouton "retour en haut" : apparaît après avoir défilé
+  const toTop = document.getElementById('toTop');
+  window.addEventListener('scroll', ()=>{ toTop.classList.toggle('show', window.scrollY > 400); });
 </script>
+<button class="totop" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Revenir en haut">↑</button>
 </body>
 </html>
