@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Back-office — Gamme Market</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,900;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="bo-body">
+
+  <!-- ÉCRAN DE CONNEXION -->
+  <div class="login-wrap" id="loginScreen">
+    <div class="login-card">
+      <a href="#" class="logo"><span class="mark">🛒</span> Gamme Market</a>
+      <h2>Espace gérant</h2>
+      <p class="sub">Connectez-vous pour gérer votre stock.</p>
+      <div class="login-err" id="loginErr"></div>
+      <div class="field"><label>Adresse e-mail</label><input type="email" id="email" placeholder="vous@exemple.fr" autocomplete="username"></div>
+      <div class="field"><label>Mot de passe</label><input type="password" id="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn" id="loginBtn" onclick="doLogin()">Se connecter</button>
+    </div>
+  </div>
+
+  <!-- BACK-OFFICE -->
+  <div id="panel" style="display:none">
+    <div class="bo-top">
+      <div class="wrap">
+        <div><h2>🔧 Gestion du magasin</h2><span class="who" id="who"></span></div>
+        <div style="display:flex;gap:10px">
+          <a class="btn ghost" href="index.html" target="_blank">👁️ Voir le site</a>
+          <button class="btn ghost" onclick="doLogout()">Déconnexion</button>
+        </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="stats" id="stats"></div>
+      <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
+      <div class="bo-tools">
+        <div class="search"><span>🔍</span><input type="text" id="boSearch" placeholder="Rechercher un produit…" oninput="renderBO()"></div>
+      </div>
+      <div class="botable" id="boTable"><div class="loading">Chargement…</div></div>
+    </div>
+  </div>
+
+  <div class="saved" id="savedToast">✓ Enregistré</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script>
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let products = [];
+
+  function statusOf(qty){
+    if(qty<=0) return {label:"Épuisé", badge:"b-out", key:"out"};
+    if(qty<=5) return {label:"Stock limité", badge:"b-low", key:"low"};
+    return {label:"En stock", badge:"b-in", key:"in"};
+  }
+  function eur(n){ return Number(n).toFixed(2).replace('.',',') + ' €'; }
+  function toast(){ const t=document.getElementById('savedToast'); t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1400); }
+
+  /* ---------- AUTH ---------- */
+  async function checkSession(){
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session){ showPanel(session.user); } else { showLogin(); }
+  }
+  function showLogin(){ document.getElementById('loginScreen').style.display='grid'; document.getElementById('panel').style.display='none'; }
+  function showPanel(user){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('panel').style.display='block';
+    document.getElementById('who').textContent = 'Connecté : ' + (user?.email||'');
+    loadProducts();
+  }
+  async function doLogin(){
+    const email=document.getElementById('email').value.trim();
+    const password=document.getElementById('password').value;
+    const errBox=document.getElementById('loginErr');
+    const btn=document.getElementById('loginBtn'); btn.textContent='Connexion…'; btn.disabled=true;
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    btn.textContent='Se connecter'; btn.disabled=false;
+    if(error){ errBox.textContent='Identifiants incorrects. Réessayez.'; errBox.classList.add('show'); return; }
+    errBox.classList.remove('show'); showPanel(data.user);
+  }
+  async function doLogout(){ await sb.auth.signOut(); showLogin(); }
+  // permet de valider le mot de passe avec la touche Entrée
+  document.addEventListener('keydown', e=>{ if(e.key==='Enter' && document.getElementById('loginScreen').style.display!=='none') doLogin(); });
+
+  /* ---------- DONNÉES ---------- */
+  async function loadProducts(){
+    const { data, error } = await sb.from('products').select('*').order('sort_order',{ascending:true});
+    if(error){ document.getElementById('boTable').innerHTML='<div class="loading">⚠️ Erreur de chargement. Vérifie config.js.</div>'; console.error(error); return; }
+    products = data||[]; renderBO();
+  }
+
+  function renderStats(){
+    const tot=products.length;
+    const out=products.filter(p=>p.qty<=0).length;
+    const low=products.filter(p=>p.qty>0&&p.qty<=5).length;
+    const inn=tot-out-low;
+    document.getElementById('stats').innerHTML = `
+      <div class="stat s-tot"><div class="n">${tot}</div><div class="l">Produits au catalogue</div></div>
+      <div class="stat s-in"><div class="n">${inn}</div><div class="l">En stock</div></div>
+      <div class="stat s-low"><div class="n">${low}</div><div class="l">Stock limité</div></div>
+      <div class="stat s-out"><div class="n">${out}</div><div class="l">À réapprovisionner</div></div>`;
+  }
+
+  function renderBO(){
+    const q=(document.getElementById('boSearch').value||"").toLowerCase();
+    const list=products.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q));
+    let rows = `<div class="borow head"><div>Produit</div><div class="colhide">Prix</div><div>Quantité</div><div>Disponibilité</div><div>Sur le site</div></div>`;
+    rows += list.map(p=>{
+      const s=statusOf(p.qty);
+      return `<div class="borow" style="${p.visible?'':'opacity:.5'}">
+        <div class="pname"><span class="pemoji" style="background:${p.color||'#EFE2CC'}">${p.emoji||'🛒'}</span><div>${p.name}<div class="pcat">${p.category}</div></div></div>
+        <div class="colhide">${eur(p.price)}</div>
+        <div class="qtybox">
+          <button onclick="changeQty(${p.id},-1)">–</button>
+          <input type="number" value="${p.qty}" min="0" onchange="setQty(${p.id},this.value)">
+          <button onclick="changeQty(${p.id},1)">+</button>
+        </div>
+        <div><span class="badge ${s.badge}">${s.label}</span></div>
+        <div><button class="toggle-vis" onclick="toggleVis(${p.id})">${p.visible?'Masquer':'Afficher'}</button></div>
+      </div>`;
+    }).join('');
+    document.getElementById('boTable').innerHTML = rows;
+    renderStats();
+  }
+
+  /* ---------- ÉCRITURE (sauvegarde en base) ---------- */
+  async function persistQty(id, qty){
+    const { error } = await sb.from('products').update({ qty }).eq('id', id);
+    if(error){ alert('Erreur de sauvegarde : '+error.message); return false; }
+    toast(); return true;
+  }
+  async function changeQty(id,d){
+    const p=products.find(x=>x.id===id); const nv=Math.max(0,p.qty+d);
+    p.qty=nv; renderBO();                 // mise à jour immédiate à l'écran
+    await persistQty(id,nv);              // puis sauvegarde réelle
+  }
+  async function setQty(id,v){
+    const p=products.find(x=>x.id===id); const nv=Math.max(0,parseInt(v)||0);
+    p.qty=nv; renderBO(); await persistQty(id,nv);
+  }
+  async function toggleVis(id){
+    const p=products.find(x=>x.id===id); const nv=!p.visible;
+    p.visible=nv; renderBO();
+    const { error } = await sb.from('products').update({ visible:nv }).eq('id', id);
+    if(error){ alert('Erreur : '+error.message); } else { toast(); }
+  }
+
+  checkSession();
+</script>
+</body>
+</html>
