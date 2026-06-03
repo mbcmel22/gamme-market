@@ -32,6 +32,9 @@ header.nav{position:sticky;top:0;z-index:150;background:rgba(251,244,233,.86);ba
 .btn:hover{background:var(--terra-dk);transform:translateY(-1px)}
 .btn.ghost{background:transparent;color:var(--green);border:1.5px solid var(--green);box-shadow:none}
 .btn.ghost:hover{background:var(--green);color:#fff}
+/* bouton "ghost" sur fond sombre (hero) : version claire et lisible */
+.hero .btn.ghost{color:#FBF4E9;border-color:rgba(251,244,233,.75)}
+.hero .btn.ghost:hover{background:#FBF4E9;color:var(--green-dk);border-color:#FBF4E9}
 @media(max-width:820px){.navlinks{display:none}}
 
 /* hero */
