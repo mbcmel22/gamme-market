@@ -131,6 +131,25 @@ footer a:hover{color:var(--gold)}
 .totop.show{opacity:1;visibility:visible;transform:translateY(0)}
 .totop:hover{background:var(--terra-dk);transform:translateY(-2px)}
 
+/* adresse cliquable vers Google Maps */
+.maplink{display:block;transition:.2s}
+.maplink:hover b{color:var(--terra-dk)}
+.maplink span{color:var(--muted)}
+.maplink-light{display:block;color:inherit;transition:.2s}
+.maplink-light:hover{color:var(--gold)}
+
+/* horaires service MoneyGram */
+.svc-hours{margin-top:12px !important;font-weight:700;color:var(--green) !important;font-size:.92rem !important}
+
+/* section avis Google */
+#avis{padding:64px 0}
+.reviews-card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:46px 30px;text-align:center;box-shadow:var(--shadow);max-width:680px;margin:0 auto}
+.reviews-card .stars{color:var(--gold);font-size:1.9rem;letter-spacing:5px;margin-bottom:14px}
+.reviews-card .pill{margin-bottom:14px}
+.reviews-card h2{font-size:clamp(1.7rem,3.4vw,2.4rem);margin-bottom:12px}
+.reviews-card p{color:var(--muted);font-size:1.05rem;max-width:48ch;margin:0 auto 26px}
+.reviews-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
 /* ===================== Back-office ===================== */
 .bo-body{background:#F3ECDF;min-height:100vh}
 .bo-top{background:#fff;border-bottom:1px solid var(--line);padding:18px 0}
