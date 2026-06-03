@@ -56,10 +56,29 @@
         <a href="#produits">Nos produits</a>
         <a href="#services">Services</a>
         <a href="#apropos">À propos</a>
+        <a href="#avis">Avis</a>
         <a href="#infos">Infos &amp; horaires</a>
       </nav>
-      <a href="#infos" class="btn">📍 Nous trouver</a>
+      <div class="nav-actions">
+        <input type="text" class="nav-search search-input" placeholder="Rechercher un produit…" oninput="onSearch(this.value)" aria-label="Rechercher un produit">
+        <button class="icon-btn" id="searchToggle" onclick="toggleSearch()" aria-label="Rechercher un produit">🔍</button>
+        <a href="#infos" class="btn nav-find">📍 Nous trouver</a>
+        <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Ouvrir le menu">☰</button>
+      </div>
     </div>
+    <div class="searchbar" id="searchBar">
+      <div class="wrap">
+        <input type="text" id="prodSearch" class="search-input" placeholder="Rechercher un produit (riz, épices, bissap…)" oninput="onSearch(this.value)">
+      </div>
+    </div>
+    <nav class="mobile-menu" id="mobileMenu">
+      <a href="#produits" onclick="closeMenu()">Nos produits</a>
+      <a href="#services" onclick="closeMenu()">Services</a>
+      <a href="#apropos" onclick="closeMenu()">À propos</a>
+      <a href="#avis" onclick="closeMenu()">Avis</a>
+      <a href="#infos" onclick="closeMenu()">Infos &amp; horaires</a>
+      <a href="#infos" class="btn" onclick="closeMenu()">📍 Nous trouver</a>
+    </nav>
   </header>
 
   <section class="hero" style="padding:0">
@@ -77,7 +96,7 @@
       </div>
       <div class="card">
         <h3>📍 Votre épicerie</h3>
-        <div class="infoline"><span class="ic">🏠</span><div><a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener"><b>53 Rue Nationale</b><span>49300 Cholet · Itinéraire ↗</span></a></div></div>
+        <div class="infoline"><span class="ic">🏠</span><div><a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener"><b>53 Rue Nationale</b><span>49300 Cholet · Itinéraire ↗️</span></a></div></div>
         <div class="infoline"><span class="ic">🕘</span><div><b>Lun–Sam : 9h–20h</b><span>Dimanche : 9h–13h</span></div></div>
         <div class="infoline"><span class="ic">📞</span><div><b>02 41 49 75 30</b><span>Appelez-nous</span></div></div>
         <div class="infoline"><span class="ic">💸</span><div><b>MoneyGram disponible</b><span>Lun–Sam : 10h–19h · Dimanche fermé</span></div></div>
@@ -148,7 +167,7 @@
         </div>
         <div class="pcard">
           <h3>📍 Coordonnées</h3>
-          <div class="contact-line"><span class="ic">🏠</span><div><a class="maplink-light" href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener"><b>53 Rue Nationale</b><br>49300 Cholet · Voir l'itinéraire ↗</a></div></div>
+          <div class="contact-line"><span class="ic">🏠</span><div><a class="maplink-light" href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener"><b>53 Rue Nationale</b><br>49300 Cholet · Voir l'itinéraire ↗️</a></div></div>
           <div class="contact-line"><span class="ic">📞</span><a href="tel:+33241497530">02 41 49 75 30</a></div>
           <div class="contact-line"><span class="ic">✉️</span><a href="mailto:contact@gammemarket-cholet.fr">contact@gammemarket-cholet.fr</a></div>
           <div class="mapbox">
@@ -201,7 +220,7 @@
         Magasin africain ouvert du lundi au samedi de 9h à 20h et le dimanche matin.
       </p>
       <div class="copyright">
-        <span>© 2026 Gamme Market — Tous droits réservés</span>
+        <span>© 2026 Gamme Market - Tous droits réservés</span>
         <span>Mentions légales · Politique de confidentialité</span>
       </div>
     </div>
@@ -216,6 +235,7 @@
   const cats = ["Tous","Féculents","Épices","Surgelés","Frais","Boissons","Snacks","Beauté"];
   let activeCat = "Tous";
   let allProducts = [];
+  let searchQuery = "";
 
   function statusOf(qty){
     if(qty<=0) return {label:"Épuisé", badge:"b-out"};
@@ -226,17 +246,23 @@
 
   function renderFilters(){
     document.getElementById('filters').innerHTML = cats.map(c=>
-      `<button class="chip ${c===activeCat?'active':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+      <button class="chip ${c===activeCat?'active':''}" onclick="setCat('${c}')">${c}</button>).join('');
   }
-  function setCat(c){ activeCat=c; renderFilters(); renderGrid(); }
+  function setCat(c){
+    activeCat=c; searchQuery="";
+    document.querySelectorAll('.search-input').forEach(i=>i.value="");
+    renderFilters(); renderGrid();
+  }
 
   function renderGrid(){
-    const list = allProducts.filter(p=>activeCat==="Tous"||p.category===activeCat);
+    const list = searchQuery
+      ? allProducts.filter(p=>p.name.toLowerCase().includes(searchQuery))
+      : allProducts.filter(p=>activeCat==="Tous"||p.category===activeCat);
     const grid = document.getElementById('prodGrid');
-    if(!list.length){ grid.innerHTML = '<div class="loading">Aucun produit dans ce rayon pour le moment.</div>'; return; }
+    if(!list.length){ grid.innerHTML = '<div class="loading">Aucun produit ne correspond à votre recherche.</div>'; return; }
     grid.innerHTML = list.map(p=>{
       const s=statusOf(p.qty);
-      const qtyTxt = p.qty>0 ? `<span class="unit" style="font-size:.75rem">· ${p.qty} en rayon</span>` : "";
+      const qtyTxt = p.qty>0 ? <span class="unit" style="font-size:.75rem">· ${p.qty} en rayon</span> : "";
       return `<article class="prod">
         <div class="thumb" style="background:${p.color||'#EFE2CC'}"><span class="cat-tag">${p.category}</span>${p.emoji||'🛒'}</div>
         <div class="body">
@@ -259,6 +285,28 @@
     renderFilters(); renderGrid();
   }
   loadProducts();
+
+  // Recherche de produits
+  function onSearch(v){ searchQuery = v.toLowerCase().trim(); renderGrid(); }
+  function toggleSearch(){
+    const bar = document.getElementById('searchBar');
+    const open = bar.classList.toggle('open');
+    if(open){
+      document.getElementById('prodSearch').focus();
+      document.getElementById('produits').scrollIntoView({behavior:'smooth'});
+    }
+  }
+
+  // Menu mobile (hamburger)
+  function toggleMenu(){
+    const menu = document.getElementById('mobileMenu');
+    const open = menu.classList.toggle('open');
+    document.getElementById('burger').textContent = open ? '✕' : '☰';
+  }
+  function closeMenu(){
+    document.getElementById('mobileMenu').classList.remove('open');
+    document.getElementById('burger').textContent = '☰';
+  }
 
   // Bouton "retour en haut" : apparaît après avoir défilé
   const toTop = document.getElementById('toTop');
