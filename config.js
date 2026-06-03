@@ -11,5 +11,5 @@
    schema.sql (lecture publique, écriture réservée au gérant connecté).
    ===================================================================== */
 
-const SUPABASE_URL = "https://tmtykunuhflrygbiwzka.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://tmtykunuhflrygbiwzka.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_Y-S6kayOP_rjm4EkxuwnuA_NmEl0wtN";
