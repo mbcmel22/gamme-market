@@ -60,15 +60,7 @@
         <a href="#infos">Infos &amp; horaires</a>
       </nav>
       <div class="nav-actions">
-        <input type="text" class="nav-search search-input" placeholder="Rechercher un produit…" oninput="onSearch(this.value)" aria-label="Rechercher un produit">
-        <button class="icon-btn" id="searchToggle" onclick="toggleSearch()" aria-label="Rechercher un produit">🔍</button>
-        <a href="#infos" class="btn nav-find">📍 Nous trouver</a>
         <button class="burger" id="burger" onclick="toggleMenu()" aria-label="Ouvrir le menu">☰</button>
-      </div>
-    </div>
-    <div class="searchbar" id="searchBar">
-      <div class="wrap">
-        <input type="text" id="prodSearch" class="search-input" placeholder="Rechercher un produit (riz, épices, bissap…)" oninput="onSearch(this.value)">
       </div>
     </div>
     <nav class="mobile-menu" id="mobileMenu">
@@ -77,7 +69,6 @@
       <a href="#apropos" onclick="closeMenu()">À propos</a>
       <a href="#avis" onclick="closeMenu()">Avis</a>
       <a href="#infos" onclick="closeMenu()">Infos &amp; horaires</a>
-      <a href="#infos" class="btn" onclick="closeMenu()">📍 Nous trouver</a>
     </nav>
   </header>
 
@@ -112,11 +103,17 @@
         <p>Une sélection de produits africains et exotiques mise à jour en temps réel. Disponibilité indiquée pour chaque article.</p>
       </div>
       <div class="prod-toolbar">
-        <div class="filter-wrap">
-          <button class="filter-btn" id="filterBtn" onclick="toggleFilter()" aria-haspopup="true">
-            <span>🗂️ Filtrer</span><span class="filter-current" id="filterCurrent">Tous</span><span class="caret">▾</span>
-          </button>
-          <div class="filter-menu" id="filterMenu"></div>
+        <div class="toolbar-left">
+          <div class="filter-wrap">
+            <button class="filter-btn" id="filterBtn" onclick="toggleFilter()" aria-haspopup="true">
+              <span>🗂️ Filtrer</span><span class="filter-current" id="filterCurrent">Tous</span><span class="caret">▾</span>
+            </button>
+            <div class="filter-menu" id="filterMenu"></div>
+          </div>
+          <div class="prod-search">
+            <span>🔍</span>
+            <input type="text" class="search-input" placeholder="Rechercher un produit…" oninput="onSearch(this.value)" aria-label="Rechercher un produit">
+          </div>
         </div>
         <span class="result-count" id="resultCount"></span>
       </div>
@@ -152,7 +149,7 @@
         <span class="pill" style="background:var(--sand);color:var(--terra-dk)">Notre maison</span>
         <h2 style="font-size:clamp(1.9rem,3.6vw,2.7rem);margin:14px 0 18px">Un bout d'Afrique à deux pas de chez vous</h2>
         <p>Au cœur de Cholet, Gamme Market réunit les produits, les saveurs et les services qui font le quotidien de la communauté africaine et de tous les amateurs de cuisine du monde.</p>
-        <p>Du riz parfumé à l'attiéké, des épices aux cosmétiques au karité, nous sélectionnons des produits authentiques et accueillons chacun avec le sourire et ce comme à la maison.</p>
+        <p>Du riz parfumé à l'attiéké, des épices aux cosmétiques au karité, nous sélectionnons des produits authentiques et accueillons chacun avec le sourireet ce comme à la maison.</p>
         <a href="#infos" class="btn" style="margin-top:8px">Venez nous rendre visite</a>
       </div>
     </div>
@@ -322,14 +319,6 @@
 
   // Recherche de produits
   function onSearch(v){ searchQuery = v.toLowerCase().trim(); renderGrid(); }
-  function toggleSearch(){
-    const bar = document.getElementById('searchBar');
-    const open = bar.classList.toggle('open');
-    if(open){
-      document.getElementById('prodSearch').focus();
-      document.getElementById('produits').scrollIntoView({behavior:'smooth'});
-    }
-  }
 
   // Menu mobile (hamburger)
   function toggleMenu(){
@@ -344,6 +333,7 @@
 
   // ===== Réservation "click & collect" via WhatsApp =====
   const WHATSAPP_GERANT = "33762147567"; // n° du gérant (format international, sans + ni 0)
+  const RESERVATION_WEBHOOK = ""; // URL du webhook Make pour l'envoi AUTOMATIQUE (laisser vide tant que non configuré)
   let reserveProduct = null;
 
   function openReserve(id){
@@ -377,7 +367,8 @@
         <small>Au cas où le produit ne serait plus disponible, le magasin vous prévient.</small>
       </div>
       <div class="modal-err" id="resErr"></div>
-      <button class="btn modal-submit" onclick="sendReserve()">📩 Mettre de côté 1h</button>
+      <p class="modal-wa-note">📲 En validant, <b>WhatsApp s'ouvre</b> avec votre message déjà rédigé. Appuyez bien sur <b>« Envoyer »</b> pour que votre réservation soit prise en compte par le magasin.</p>
+      <button class="btn modal-submit" onclick="sendReserve()">📩 Réserver via WhatsApp</button>
       ${epuise?'<p class="modal-note">Ce produit est actuellement épuisé : votre demande sera traitée dès réapprovisionnement.</p>':''}`;
     document.getElementById('reserveModal').classList.add('open');
     document.body.style.overflow='hidden';
@@ -386,7 +377,7 @@
     document.getElementById('reserveModal').classList.remove('open');
     document.body.style.overflow='';
   }
-  function sendReserve(){
+  async function sendReserve(){
     const name = document.getElementById('resName').value.trim();
     const qty = parseInt(document.getElementById('resQty').value)||0;
     const unit = document.getElementById('resUnit').value;
@@ -395,22 +386,51 @@
     if(!name){ err.textContent='Indiquez votre nom.'; err.classList.add('show'); return; }
     if(qty<=0){ err.textContent='Indiquez une quantité valide.'; err.classList.add('show'); return; }
     if(phone.replace(/\D/g,'').length<8){ err.textContent='Indiquez un numéro de téléphone valide.'; err.classList.add('show'); return; }
-    const msg =
-      `Bonjour Gamme Market 👋\n`+
-      `Je souhaite mettre un produit de côté (réservation 1h) :\n`+
-      `• Nom : ${name}\n`+
-      `• Produit : ${reserveProduct.name}\n`+
-      `• Quantité : ${qty} ${unit}\n`+
-      `• Mon numéro : ${phone}\n`+
-      `Merci de me prévenir s'il n'y a plus de stock.`;
-    window.open('https://wa.me/'+WHATSAPP_GERANT+'?text='+encodeURIComponent(msg), '_blank');
-    document.getElementById('reserveBody').innerHTML = `
-      <div class="modal-success">
-        <div class="ok">✓</div>
-        <h3>Merci ${name} !</h3>
-        <p>Votre réservation pour <b>${reserveProduct.name}</b> a bien été envoyée. Le produit est mis de côté pendant 1h. Le magasin vous recontacte au <b>${phone}</b> en cas de rupture.</p>
-        <button class="btn" onclick="closeReserve()">Parfait, merci</button>
-      </div>`;
+
+    const btn = document.querySelector('.modal-submit');
+    if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
+    const data = { nom:name, produit:reserveProduct.name, produit_id:reserveProduct.id, quantite:qty, unite:unit, telephone:phone };
+
+    // 1) On enregistre la réservation en base : le gérant ne perd JAMAIS une commande,
+    //    même si le client ne va pas au bout (visible ensuite dans le back-office).
+    try { await sb.from('reservations').insert(data); } catch(e){ console.warn('reservations:', e); }
+
+    // 2) Notification du gérant
+    let auto = false;
+    if(RESERVATION_WEBHOOK){
+      // Envoi AUTOMATIQUE via Make (le client n'a rien à faire)
+      try {
+        await fetch(RESERVATION_WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+        auto = true;
+      } catch(e){ console.warn('webhook:', e); }
+    }
+    if(!auto){
+      // Repli tant que l'envoi auto n'est pas configuré : on ouvre WhatsApp pré-rempli
+      const msg =
+        `Bonjour Gamme Market 👋\n`+
+        `Réservation 1h :\n`+
+        `• Nom : ${name}\n`+
+        `• Produit : ${reserveProduct.name}\n`+
+        `• Quantité : ${qty} ${unit}\n`+
+        `• Numéro : ${phone}`;
+      window.open('https://wa.me/'+WHATSAPP_GERANT+'?text='+encodeURIComponent(msg), '_blank');
+    }
+
+    const successHtml = auto
+      ? `<div class="modal-success">
+          <div class="ok">✓</div>
+          <h3>Merci ${name} !</h3>
+          <p>Votre réservation pour <b>${reserveProduct.name}</b> a été transmise automatiquement au magasin. Le produit est mis de côté pendant 1h. Le magasin vous recontacte au <b>${phone}</b> en cas de rupture.</p>
+          <button class="btn" onclick="closeReserve()">Parfait, merci</button>
+        </div>`
+      : `<div class="modal-success">
+          <div class="ok">📲</div>
+          <h3>Plus qu'une étape, ${name} !</h3>
+          <p>WhatsApp vient de s'ouvrir avec votre demande pour <b>${reserveProduct.name}</b>. <b>Appuyez bien sur « Envoyer »</b> dans WhatsApp : sans cette validation, le magasin ne reçoit pas votre réservation.</p>
+          <p class="modal-call">Un doute ou une erreur ? Appelez le magasin au <a href="tel:+33241497530">02 41 49 75 30</a> pour vérifier que votre commande a bien été reçue.</p>
+          <button class="btn" onclick="closeReserve()">C'est envoyé, merci !</button>
+        </div>`;
+    document.getElementById('reserveBody').innerHTML = successHtml;
   }
 
   // Bouton "retour en haut" : apparaît après avoir défilé
