@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- ============ SEO ============ -->
-<title>Gamme Market Cholet - Épicerie africaine, produits exotiques & MoneyGram</title>
+<title>Gamme Market Cholet — Épicerie africaine, produits exotiques & MoneyGram</title>
 <meta name="description" content="Gamme Market, votre épicerie africaine à Cholet (49). Produits exotiques, alimentation africaine, frais et surgelés, cosmétiques au beurre de karité et service MoneyGram. 53 Rue Nationale, 49300 Cholet.">
 <meta name="keywords" content="épicerie africaine Cholet, magasin africain Cholet, produits africains Cholet, alimentation exotique Cholet, MoneyGram Cholet, transfert d'argent Cholet, attiéké Cholet, beurre de karité Cholet, épices africaines, foufou, bissap">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.gammemarket-cholet.fr/">
 <meta property="og:type" content="business.business">
-<meta property="og:title" content="Gamme Market Cholet — Épicerie africaine & produits exotiques">
+<meta property="og:title" content="Gamme Market Cholet - Épicerie africaine & produits exotiques">
 <meta property="og:description" content="Produits africains et exotiques, frais, surgelés, cosmétiques et service MoneyGram à Cholet.">
 <meta property="og:locale" content="fr_FR">
 <script type="application/ld+json">
@@ -90,7 +90,7 @@
         <div class="infoline"><span class="ic">🏠</span><div><a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener"><b>53 Rue Nationale</b><span>49300 Cholet · Itinéraire ↗</span></a></div></div>
         <div class="infoline"><span class="ic">🕘</span><div><b>Lun–Sam : 9h–20h</b><span>Dimanche : 9h–13h</span></div></div>
         <div class="infoline"><span class="ic">📞</span><div><b>02 41 49 75 30</b><span>Appelez-nous</span></div></div>
-        <div class="infoline"><span class="ic">💸</span><div><b>MoneyGram disponible</b><span>Lun–Sam : 10h–19h · Dimanche fermé</span></div></div>
+        <div class="infoline"><span class="ic">💸</span><div id="heroTransfer"><b>MoneyGram &amp; RIA disponibles</b><span>Transfert d'argent · Lun–Sam : 10h–19h</span></div></div>
       </div>
     </div>
   </section>
@@ -133,8 +133,8 @@
         <h2>Nos services annexes</h2>
         <p>Gamme Market vous accompagne au-delà des courses, avec des services pensés pour la communauté.</p>
       </div>
-      <div class="svc-grid">
-        <div class="svc feat"><div class="ic">💸</div><h3>MoneyGram</h3><p>Envoyez et recevez de l'argent partout dans le monde, rapidement et en toute sécurité, directement en magasin.</p><p class="svc-hours">🕘 Lun–Sam : 10h–19h · Dimanche fermé</p></div>
+      <div class="svc-grid" id="svcGrid">
+        <!-- MoneyGram et RIA insérés ici dynamiquement (disponibilité gérée depuis le back-office) -->
         <div class="svc"><div class="ic">📱</div><h3>Recharges téléphoniques</h3><p>Rechargez vos forfaits internationaux et restez connecté avec vos proches à l'étranger.</p></div>
         <div class="svc"><div class="ic">📦</div><h3>Envoi de colis</h3><p>Service d'expédition de colis vers de nombreuses destinations en Afrique.</p></div>
         <div class="svc"><div class="ic">🧴</div><h3>Espace beauté &amp; soins</h3><p>Beurre de karité, savon noir et cosmétiques naturels pour prendre soin de vous.</p></div>
@@ -149,7 +149,7 @@
         <span class="pill" style="background:var(--sand);color:var(--terra-dk)">Notre maison</span>
         <h2 style="font-size:clamp(1.9rem,3.6vw,2.7rem);margin:14px 0 18px">Un bout d'Afrique à deux pas de chez vous</h2>
         <p>Au cœur de Cholet, Gamme Market réunit les produits, les saveurs et les services qui font le quotidien de la communauté africaine et de tous les amateurs de cuisine du monde.</p>
-        <p>Du riz parfumé à l'attiéké, des épices aux cosmétiques au karité, nous sélectionnons des produits authentiques et accueillons chacun avec le sourireet ce comme à la maison.</p>
+        <p>Du riz parfumé à l'attiéké, des épices aux cosmétiques au karité, nous sélectionnons des produits authentiques et accueillons chacun avec le sourire et ce comme à la maison.</p>
         <a href="#infos" class="btn" style="margin-top:8px">Venez nous rendre visite</a>
       </div>
     </div>
@@ -316,6 +316,54 @@
     renderFilters(); renderGrid();
   }
   loadProducts();
+  loadServices();
+
+  // ===== Services de transfert (MoneyGram, RIA) + disponibilité =====
+  const TRANSFER_ICONS = { moneygram:'💸', ria:'💱' };
+  const TRANSFER_DESC = {
+    moneygram:"Envoyez et recevez de l'argent partout dans le monde, rapidement et en toute sécurité, directement en magasin.",
+    ria:"Transfert d'argent international rapide et sécurisé avec RIA, directement à votre épicerie."
+  };
+  let servicesData = [
+    {id:'moneygram', name:'MoneyGram', available:true, hours:'Lun–Sam : 10h–19h · Dimanche fermé'},
+    {id:'ria', name:'RIA', available:true, hours:'Lun–Sam : 10h–19h · Dimanche fermé'}
+  ];
+
+  async function loadServices(){
+    try {
+      const { data, error } = await sb.from('services').select('*').order('sort_order',{ascending:true});
+      if(!error && data && data.length){ servicesData = data; }
+    } catch(e){ console.warn('services:', e); }
+    renderServices();
+  }
+  function renderServices(){
+    const grid = document.getElementById('svcGrid');
+    grid.querySelectorAll('.svc-transfer').forEach(n=>n.remove());
+    const html = servicesData.map((s,i)=>{
+      const ic = TRANSFER_ICONS[s.id] || '💸';
+      const desc = TRANSFER_DESC[s.id] || "Transfert d'argent international en magasin.";
+      const badge = s.available
+        ? '<span class="svc-status ok">● Disponible</span>'
+        : '<span class="svc-status off">● Indisponible</span>';
+      return `<div class="svc svc-transfer ${i===0?'feat':''} ${s.available?'':'is-off'}">
+        <div class="ic">${ic}</div>
+        <h3>${s.name} ${badge}</h3>
+        <p>${desc}</p>
+        <p class="svc-hours">🕘 ${s.hours||''}</p>
+      </div>`;
+    }).join('');
+    grid.insertAdjacentHTML('afterbegin', html);
+    updateHeroTransfer();
+  }
+  function updateHeroTransfer(){
+    const el = document.getElementById('heroTransfer'); if(!el) return;
+    const avail = servicesData.filter(s=>s.available).map(s=>s.name);
+    if(avail.length){
+      el.innerHTML = `<b>${avail.join(' & ')} disponible${avail.length>1?'s':''}</b><span>Transfert d'argent · Lun–Sam : 10h–19h</span>`;
+    } else {
+      el.innerHTML = `<b>Transferts momentanément indisponibles</b><span>MoneyGram / RIA</span>`;
+    }
+  }
 
   // Recherche de produits
   function onSearch(v){ searchQuery = v.toLowerCase().trim(); renderGrid(); }
