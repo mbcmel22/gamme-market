@@ -38,6 +38,13 @@
     </div>
     <div class="wrap">
       <div class="stats" id="stats"></div>
+
+      <div class="svc-admin">
+        <h3>🌍 Services de transfert d'argent</h3>
+        <p class="svc-admin-sub">Activez ou désactivez un service : le changement s'affiche aussitôt sur le site public.</p>
+        <div id="servicesAdmin"><div class="loading">Chargement…</div></div>
+      </div>
+
       <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
       <div class="bo-tools">
         <div class="search"><span>🔍</span><input type="text" id="boSearch" placeholder="Rechercher un produit…" oninput="renderBO()"></div>
@@ -73,6 +80,7 @@
     document.getElementById('panel').style.display='block';
     document.getElementById('who').textContent = 'Connecté : ' + (user?.email||'');
     loadProducts();
+    loadServicesAdmin();
   }
   async function doLogin(){
     const email=document.getElementById('email').value.trim();
@@ -93,6 +101,28 @@
     const { data, error } = await sb.from('products').select('*').order('sort_order',{ascending:true});
     if(error){ document.getElementById('boTable').innerHTML='<div class="loading">⚠️ Erreur de chargement. Vérifie config.js.</div>'; console.error(error); return; }
     products = data||[]; renderBO();
+  }
+
+  /* ---------- SERVICES DE TRANSFERT ---------- */
+  let svcList = [];
+  async function loadServicesAdmin(){
+    const box = document.getElementById('servicesAdmin');
+    const { data, error } = await sb.from('services').select('*').order('sort_order',{ascending:true});
+    if(error){ box.innerHTML='<div class="loading">⚠️ Lance d\'abord <b>services.sql</b> dans Supabase.</div>'; console.warn(error); return; }
+    svcList = data||[]; renderServicesAdmin();
+  }
+  function renderServicesAdmin(){
+    document.getElementById('servicesAdmin').innerHTML = svcList.map(s=>`
+      <div class="svc-row">
+        <div><b>${s.name}</b> <span class="svc-row-status ${s.available?'on':'off'}">${s.available?'Disponible':'Indisponible'}</span></div>
+        <button class="switch ${s.available?'on':''}" onclick="toggleService('${s.id}')" aria-label="Basculer ${s.name}"><span></span></button>
+      </div>`).join('');
+  }
+  async function toggleService(id){
+    const s = svcList.find(x=>x.id===id); if(!s) return;
+    const nv = !s.available; s.available = nv; renderServicesAdmin();
+    const { error } = await sb.from('services').update({ available:nv }).eq('id', id);
+    if(error){ alert('Erreur : '+error.message); s.available=!nv; renderServicesAdmin(); } else { toast(); }
   }
 
   function renderStats(){
