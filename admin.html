@@ -198,11 +198,12 @@
       const url = URL.createObjectURL(file);
       img.onload = ()=>{
         URL.revokeObjectURL(url);
-        const side = Math.min(img.width, img.height);
-        const sx = (img.width - side)/2, sy = (img.height - side)/2;
-        const out = Math.min(side, maxSize);
-        const c = document.createElement('canvas'); c.width=out; c.height=out;
-        c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, out, out);
+        const scale = Math.min(1, maxSize/Math.max(img.width, img.height));
+        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+        const c = document.createElement('canvas'); c.width=w; c.height=h;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);   // fond blanc propre
+        ctx.drawImage(img, 0, 0, w, h);                      // produit entier, sans recadrage
         c.toBlob(b=> b?resolve(b):reject(new Error('conversion')), 'image/jpeg', quality);
       };
       img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('image illisible')); };
