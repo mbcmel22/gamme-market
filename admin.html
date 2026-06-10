@@ -45,6 +45,16 @@
         <div id="servicesAdmin"><div class="loading">Chargement…</div></div>
       </div>
 
+      <div class="svc-admin about-admin">
+        <h3>🏠 Photo de la section « Notre maison »</h3>
+        <p class="svc-admin-sub">Cette photo s'affiche sur la page d'accueil. Cliquez sur l'image pour la remplacer (appareil photo ou galerie).</p>
+        <label class="about-photo" id="aboutPhotoBox" title="Cliquez pour changer la photo">
+          <img id="aboutPreview" src="epicerie-africaine.webp" alt="Photo à propos">
+          <span class="about-cam">📷 Changer</span>
+          <input type="file" accept="image/*" onchange="uploadAboutImage(this)">
+        </label>
+      </div>
+
       <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
 
       <div class="shop-list">
@@ -92,6 +102,36 @@
     document.getElementById('who').textContent = 'Connecté : ' + (user?.email||'');
     loadProducts();
     loadServicesAdmin();
+    loadAboutImage();
+  }
+
+  /* ---------- Photo "À propos" (réglages du site) ---------- */
+  async function loadAboutImage(){
+    try {
+      const { data, error } = await sb.from('settings').select('*').eq('key','about_image').maybeSingle();
+      if(!error && data && data.value){ document.getElementById('aboutPreview').src = data.value; }
+    } catch(e){ console.warn('about:', e); }
+  }
+  async function uploadAboutImage(input){
+    const file = input.files && input.files[0]; if(!file) return;
+    if(!file.type.startsWith('image/')){ alert('Veuillez choisir une image.'); input.value=''; return; }
+    const box = document.getElementById('aboutPhotoBox'); box.classList.add('uploading');
+    try {
+      const blob = await resizeImage(file, 1100, 0.85);
+      const path = `apropos-${Date.now()}.jpg`;
+      const { error: upErr } = await sb.storage.from('produits').upload(path, blob, { contentType:'image/jpeg', upsert:true, cacheControl:'3600' });
+      if(upErr) throw upErr;
+      const { data } = sb.storage.from('produits').getPublicUrl(path);
+      const url = data.publicUrl;
+      const { error } = await sb.from('settings').upsert({ key:'about_image', value:url });
+      if(error) throw error;
+      document.getElementById('aboutPreview').src = url;
+      toast();
+    } catch(e){
+      alert('Erreur photo : ' + (e.message||e) + '\n(Avez-vous lancé settings.sql et storage.sql dans Supabase ?)');
+    } finally {
+      box.classList.remove('uploading'); input.value='';
+    }
   }
   async function doLogin(){
     const email=document.getElementById('email').value.trim();
