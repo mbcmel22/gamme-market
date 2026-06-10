@@ -157,7 +157,7 @@
       const visual = p.image_url ? `<img src="${p.image_url}" alt="" class="pemoji-img">` : (p.emoji||'🛒');
       const nameSafe = (p.name||'').replace(/"/g,'&quot;');
       return `<div class="borow" style="${p.visible?'':'opacity:.5'}">
-        <div class="pname"><span class="pemoji" style="background:${p.color||'#EFE2CC'}">${visual}</span>
+        <div class="pname"><label class="pemoji photo-upload" style="background:${p.color||'#EFE2CC'}" title="Cliquez pour ajouter ou changer la photo">${visual}<span class="photo-cam">📷</span><input type="file" accept="image/*" onchange="uploadPhoto(${p.id}, this)"></label>
           <div style="flex:1;min-width:0">
             <input class="edit-name" value="${nameSafe}" onchange="renameProduct(${p.id}, this.value)" aria-label="Nom du produit">
             <div class="pcat">${p.category}</div>
@@ -189,6 +189,46 @@
     const p = products.find(x=>x.id===id); if(p) p.price = price;
     const { error } = await sb.from('products').update({ price }).eq('id', id);
     if(error){ alert('Erreur : '+error.message); } else { toast(); }
+  }
+
+  /* ---------- Photo : redimensionnement carré + upload ---------- */
+  function resizeImage(file, maxSize, quality){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = ()=>{
+        URL.revokeObjectURL(url);
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side)/2, sy = (img.height - side)/2;
+        const out = Math.min(side, maxSize);
+        const c = document.createElement('canvas'); c.width=out; c.height=out;
+        c.getContext('2d').drawImage(img, sx, sy, side, side, 0, 0, out, out);
+        c.toBlob(b=> b?resolve(b):reject(new Error('conversion')), 'image/jpeg', quality);
+      };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('image illisible')); };
+      img.src = url;
+    });
+  }
+  async function uploadPhoto(id, input){
+    const file = input.files && input.files[0]; if(!file) return;
+    if(!file.type.startsWith('image/')){ alert('Veuillez choisir une image.'); input.value=''; return; }
+    const label = input.closest('.pemoji'); if(label) label.classList.add('uploading');
+    try {
+      const blob = await resizeImage(file, 800, 0.82);        // recadrage carré + compression auto
+      const path = `produit-${id}-${Date.now()}.jpg`;
+      const { error: upErr } = await sb.storage.from('produits').upload(path, blob, { contentType:'image/jpeg', upsert:true, cacheControl:'3600' });
+      if(upErr) throw upErr;
+      const { data } = sb.storage.from('produits').getPublicUrl(path);
+      const url = data.publicUrl;
+      const { error } = await sb.from('products').update({ image_url:url }).eq('id', id);
+      if(error) throw error;
+      const p = products.find(x=>x.id===id); if(p) p.image_url = url;
+      renderBO(); toast();
+    } catch(e){
+      alert('Erreur lors de l\'envoi de la photo : ' + (e.message||e) + '\n(Avez-vous bien lancé storage.sql dans Supabase ?)');
+    } finally {
+      if(label) label.classList.remove('uploading'); input.value='';
+    }
   }
 
   /* ---------- Produits épuisés : liste de courses ---------- */
