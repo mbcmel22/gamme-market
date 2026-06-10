@@ -46,6 +46,17 @@
       </div>
 
       <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
+
+      <div class="shop-list">
+        <div class="shop-list-head">
+          <div>
+            <h3>🛒 Produits épuisés — liste de courses</h3>
+            <p class="svc-admin-sub" id="shopCount"></p>
+          </div>
+          <button class="btn" id="dlBtn" onclick="downloadShoppingList()">⬇️ Télécharger la liste</button>
+        </div>
+        <div id="shopListBody"></div>
+      </div>
       <div class="bo-tools">
         <div class="search"><span>🔍</span><input type="text" id="boSearch" placeholder="Rechercher un produit…" oninput="renderBO()"></div>
       </div>
@@ -140,12 +151,18 @@
   function renderBO(){
     const q=(document.getElementById('boSearch').value||"").toLowerCase();
     const list=products.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q));
-    let rows = `<div class="borow head"><div>Produit</div><div class="colhide">Prix</div><div>Quantité</div><div>Disponibilité</div><div>Sur le site</div></div>`;
+    let rows = `<div class="borow head"><div>Produit (cliquez pour renommer)</div><div class="colhide">Prix (€)</div><div>Quantité</div><div>Disponibilité</div><div>Sur le site</div></div>`;
     rows += list.map(p=>{
       const s=statusOf(p.qty);
+      const visual = p.image_url ? `<img src="${p.image_url}" alt="" class="pemoji-img">` : (p.emoji||'🛒');
+      const nameSafe = (p.name||'').replace(/"/g,'&quot;');
       return `<div class="borow" style="${p.visible?'':'opacity:.5'}">
-        <div class="pname"><span class="pemoji" style="background:${p.color||'#EFE2CC'}">${p.emoji||'🛒'}</span><div>${p.name}<div class="pcat">${p.category}</div></div></div>
-        <div class="colhide">${eur(p.price)}</div>
+        <div class="pname"><span class="pemoji" style="background:${p.color||'#EFE2CC'}">${visual}</span>
+          <div style="flex:1;min-width:0">
+            <input class="edit-name" value="${nameSafe}" onchange="renameProduct(${p.id}, this.value)" aria-label="Nom du produit">
+            <div class="pcat">${p.category}</div>
+          </div></div>
+        <div class="colhide"><div class="edit-price"><input type="number" step="0.10" min="0" value="${p.price||0}" onchange="setPrice(${p.id}, this.value)" aria-label="Prix">€</div></div>
         <div class="qtybox">
           <button onclick="changeQty(${p.id},-1)">–</button>
           <input type="number" value="${p.qty}" min="0" onchange="setQty(${p.id},this.value)">
@@ -157,6 +174,56 @@
     }).join('');
     document.getElementById('boTable').innerHTML = rows;
     renderStats();
+    renderShoppingList();
+  }
+
+  /* ---------- Renommer / changer le prix d'un produit ---------- */
+  async function renameProduct(id, val){
+    const name = (val||'').trim(); if(!name) return;
+    const p = products.find(x=>x.id===id); if(p) p.name = name;
+    const { error } = await sb.from('products').update({ name }).eq('id', id);
+    if(error){ alert('Erreur : '+error.message); } else { toast(); renderShoppingList(); }
+  }
+  async function setPrice(id, val){
+    const price = Math.max(0, parseFloat(val)||0);
+    const p = products.find(x=>x.id===id); if(p) p.price = price;
+    const { error } = await sb.from('products').update({ price }).eq('id', id);
+    if(error){ alert('Erreur : '+error.message); } else { toast(); }
+  }
+
+  /* ---------- Produits épuisés : liste de courses ---------- */
+  function renderShoppingList(){
+    const out = products.filter(p=>p.qty<=0);
+    document.getElementById('shopCount').textContent = out.length
+      ? `${out.length} produit${out.length>1?'s':''} à racheter`
+      : 'Aucun produit épuisé pour le moment 🎉';
+    document.getElementById('dlBtn').style.display = out.length ? '' : 'none';
+    const body = document.getElementById('shopListBody');
+    if(!out.length){ body.innerHTML = '<p class="shop-empty">Tout est en stock. La liste se remplit automatiquement quand un produit atteint 0.</p>'; return; }
+    const byCat = {};
+    out.forEach(p=>{ (byCat[p.category]=byCat[p.category]||[]).push(p); });
+    body.innerHTML = Object.keys(byCat).map(cat=>`
+      <div class="shop-cat"><h4>${cat}</h4>${byCat[cat].map(p=>
+        `<label class="shop-item"><input type="checkbox"> ${p.name} <span class="shop-unit">${p.unit||''}</span></label>`).join('')}</div>`).join('');
+  }
+  function downloadShoppingList(){
+    const out = products.filter(p=>p.qty<=0);
+    if(!out.length) return;
+    const d = new Date().toLocaleDateString('fr-FR');
+    let txt = `LISTE DE COURSES — GAMME MARKET\nGénérée le ${d}\n\n`;
+    const byCat = {};
+    out.forEach(p=>{ (byCat[p.category]=byCat[p.category]||[]).push(p); });
+    Object.keys(byCat).forEach(cat=>{
+      txt += `== ${cat.toUpperCase()} ==\n`;
+      byCat[cat].forEach(p=>{ txt += `[ ] ${p.name}${p.unit?' ('+p.unit+')':''}\n`; });
+      txt += `\n`;
+    });
+    const blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `liste-courses-gamme-market-${new Date().toISOString().slice(0,10)}.txt`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
   }
 
   /* ---------- ÉCRITURE (sauvegarde en base) ---------- */
