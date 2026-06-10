@@ -332,3 +332,11 @@ footer a:hover{color:var(--gold)}
 .shop-item input{width:17px;height:17px;accent-color:var(--green)}
 .shop-unit{color:var(--muted);font-size:.85rem}
 .shop-empty{color:var(--muted);font-size:.95rem}
+
+/* ===================== Back-office : ajout de photo ===================== */
+.photo-upload{position:relative;cursor:pointer;overflow:hidden;display:grid;place-items:center}
+.photo-upload input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.photo-cam{position:absolute;bottom:-1px;right:-1px;width:18px;height:18px;border-radius:50%;background:var(--green-dk);color:#fff;font-size:.6rem;display:grid;place-items:center;border:2px solid #fff}
+.photo-upload:hover{outline:2px solid var(--terra);outline-offset:1px}
+.photo-upload.uploading{opacity:.55}
+.photo-upload.uploading::after{content:"⏳";position:absolute;inset:0;display:grid;place-items:center;font-size:1.1rem;background:rgba(255,255,255,.6)}
