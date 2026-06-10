@@ -236,6 +236,12 @@
     </div>
   </footer>
 
+<!-- Visionneuse photo plein écran -->
+<div class="photo-zoom" id="photoZoom" onclick="closeZoom()">
+  <img id="photoZoomImg" src="" alt="">
+  <button class="zoom-close" aria-label="Fermer">✕</button>
+</div>
+
 <!-- Modale de réservation (click & collect WhatsApp) -->
 <div class="modal-overlay" id="reserveModal" onclick="if(event.target===this)closeReserve()">
   <div class="modal">
@@ -286,10 +292,10 @@
     grid.innerHTML = list.map(p=>{
       const s=statusOf(p.qty);
       const qtyTxt = p.qty>0 ? `<span class="unit" style="font-size:.75rem">· ${p.qty} en rayon</span>` : "";
-      const visual = p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="thumb-img" loading="lazy">` : (p.emoji||'🛒');
+      const visual = p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="thumb-img" loading="lazy">` : `<span class="thumb-emoji">${p.emoji||'🛒'}</span>`;
       const priceTxt = (p.price && p.price>0) ? eur(p.price) : 'Prix en magasin';
       return `<article class="prod" onclick="openReserve(${p.id})">
-        <div class="thumb" style="background:${p.color||'#EFE2CC'}">${visual}<span class="cat-tag">${p.category}</span></div>
+        <div class="thumb ${p.image_url?'has-photo':''}" style="${p.image_url?'':'background:'+(p.color||'#EFE2CC')}">${visual}<span class="cat-tag">${p.category}</span></div>
         <div class="body">
           <h4>${p.name}</h4>
           <span class="unit">${p.unit||''} ${qtyTxt}</span>
@@ -391,13 +397,13 @@
     reserveProduct = p;
     const s = statusOf(p.qty);
     const epuise = p.qty<=0;
+    const photoBlock = p.image_url
+      ? `<div class="modal-photo" onclick="zoomPhoto('${p.image_url}')"><img src="${p.image_url}" alt="${p.name}"><span class="zoom-hint">🔍 Agrandir</span></div>`
+      : `<div class="modal-photo is-emoji" style="background:${p.color||'#EFE2CC'}">${p.emoji||'🛒'}</div>`;
     document.getElementById('reserveBody').innerHTML = `
-      <div class="modal-head">
-        <span class="modal-emoji" style="background:${p.color||'#EFE2CC'}">${p.emoji||'🛒'}</span>
-        <div><h3>${p.name}</h3>
-          <div class="modal-sub"><span class="unit">${p.unit||''} · ${(p.price&&p.price>0)?eur(p.price):'Prix en magasin'}</span> <span class="badge ${s.badge}">${s.label}</span></div>
-        </div>
-      </div>
+      ${photoBlock}
+      <h3 class="modal-title">${p.name}</h3>
+      <div class="modal-sub"><span class="unit">${p.unit||''} · ${(p.price&&p.price>0)?eur(p.price):'Prix en magasin'}</span> <span class="badge ${s.badge}">${s.label}</span></div>
       <p class="modal-intro">Réservez ce produit : il sera <b>mis de côté pendant 1h</b>. Votre demande part directement au magasin par WhatsApp.</p>
       <div class="modal-field"><label>Votre nom</label>
         <input type="text" id="resName" placeholder="Ex : Awa Diallo">
@@ -427,6 +433,11 @@
     document.getElementById('reserveModal').classList.remove('open');
     document.body.style.overflow='';
   }
+  function zoomPhoto(url){
+    document.getElementById('photoZoomImg').src = url;
+    document.getElementById('photoZoom').classList.add('open');
+  }
+  function closeZoom(){ document.getElementById('photoZoom').classList.remove('open'); }
   async function sendReserve(){
     const name = document.getElementById('resName').value.trim();
     const qty = parseInt(document.getElementById('resQty').value)||0;
