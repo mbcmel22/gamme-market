@@ -129,13 +129,15 @@ section{padding:78px 0}
 .swipe-hint{text-align:center;color:var(--muted);font-size:.85rem;margin-top:6px}
 @media(min-width:821px){ .car-arrow{display:flex} .swipe-hint{display:none} }
 .prod{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:.25s;display:flex;flex-direction:column}
-.car-track .prod{flex:0 0 230px;width:230px;scroll-snap-align:start;cursor:pointer}
+.car-track .prod{flex:0 0 250px;width:250px;scroll-snap-align:start;cursor:pointer}
 .reserve-hint{margin-top:8px;color:var(--terra);font-weight:700;font-size:.82rem;opacity:.55;transition:.2s}
 .prod:hover .reserve-hint{opacity:1}
-.thumb-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumb-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:14px}
+.thumb-emoji{font-size:3.2rem}
 .price-ask{font-size:.95rem;color:var(--terra-dk)}
 .prod:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:transparent}
-.prod .thumb{height:130px;display:grid;place-items:center;font-size:3.2rem;position:relative}
+.prod .thumb{height:190px;display:grid;place-items:center;font-size:3.2rem;position:relative;background:#fff}
+.prod .thumb.has-photo{background:#fff}
 .prod .cat-tag{position:absolute;top:10px;left:10px;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.85);color:var(--ink);padding:4px 9px;border-radius:100px}
 .prod .body{padding:15px 16px 17px;display:flex;flex-direction:column;gap:4px;flex:1}
 .prod h4{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;line-height:1.15}
@@ -275,10 +277,18 @@ footer a:hover{color:var(--gold)}
 @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
 .modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:0;background:var(--sand);color:var(--ink);font-size:1rem;cursor:pointer}
 .modal-close:hover{background:var(--line)}
-.modal-head{display:flex;gap:14px;align-items:center;margin-bottom:14px;padding-right:30px}
-.modal-emoji{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:1.9rem;flex-shrink:0}
-.modal-head h3{font-size:1.3rem;line-height:1.1}
-.modal-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.modal-photo{position:relative;width:100%;height:210px;border-radius:16px;overflow:hidden;margin-bottom:16px;background:#fff;display:grid;place-items:center;cursor:zoom-in;border:1px solid var(--line)}
+.modal-photo img{width:100%;height:100%;object-fit:contain;padding:16px}
+.modal-photo.is-emoji{font-size:4.6rem;cursor:default;background:var(--sand)}
+.zoom-hint{position:absolute;bottom:10px;right:10px;background:rgba(26,19,13,.72);color:#fff;font-size:.74rem;font-weight:600;padding:5px 11px;border-radius:100px}
+.modal-title{font-size:1.4rem;line-height:1.1;margin-bottom:6px;padding-right:30px}
+.modal-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+/* visionneuse photo plein écran */
+.photo-zoom{display:none;position:fixed;inset:0;background:rgba(20,14,9,.92);z-index:500;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+.photo-zoom.open{display:flex}
+.photo-zoom img{max-width:100%;max-height:100%;border-radius:12px;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+.zoom-close{position:fixed;top:18px;right:18px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:1.2rem;cursor:pointer}
+.zoom-close:hover{background:rgba(255,255,255,.28)}
 .modal-intro{color:var(--muted);font-size:.92rem;margin-bottom:18px}
 .modal-field{margin-bottom:14px}
 .modal-field label{display:block;font-weight:700;font-size:.88rem;margin-bottom:7px}
@@ -340,3 +350,12 @@ footer a:hover{color:var(--gold)}
 .photo-upload:hover{outline:2px solid var(--terra);outline-offset:1px}
 .photo-upload.uploading{opacity:.55}
 .photo-upload.uploading::after{content:"⏳";position:absolute;inset:0;display:grid;place-items:center;font-size:1.1rem;background:rgba(255,255,255,.6)}
+
+/* ===================== Adaptation mobile : photos ===================== */
+@media(max-width:480px){
+  .prod .thumb{height:165px}
+  .car-track .prod{flex:0 0 220px;width:220px}
+  .modal-photo{height:180px}
+  .modal{padding:22px 20px}
+  .modal-title{font-size:1.25rem}
+}
