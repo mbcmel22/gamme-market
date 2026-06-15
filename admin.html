@@ -39,12 +39,21 @@
     <div class="wrap">
       <div class="stats" id="stats"></div>
 
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="produits" onclick="showTab('produits',this)">📦 Produits</button>
+        <button class="tab-btn" data-tab="services" onclick="showTab('services',this)">💱 Services</button>
+        <button class="tab-btn" data-tab="apparence" onclick="showTab('apparence',this)">🎨 Logos &amp; photos</button>
+      </div>
+
+      <div class="tab-pane hidden" id="tab-services">
       <div class="svc-admin">
         <h3>🌍 Services de transfert d'argent</h3>
         <p class="svc-admin-sub">Activez ou désactivez un service : le changement s'affiche aussitôt sur le site public.</p>
         <div id="servicesAdmin"><div class="loading">Chargement…</div></div>
       </div>
+      </div><!-- /tab-services -->
 
+      <div class="tab-pane hidden" id="tab-apparence">
       <div class="svc-admin about-admin">
         <h3>🏠 Photo de la section « Notre maison »</h3>
         <p class="svc-admin-sub">Cette photo s'affiche sur la page d'accueil. Cliquez sur l'image pour la remplacer (appareil photo ou galerie).</p>
@@ -93,7 +102,9 @@
           </div>
         </div>
       </div>
+      </div><!-- /tab-apparence -->
 
+      <div class="tab-pane" id="tab-produits">
       <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
 
       <div class="shop-list">
@@ -113,6 +124,7 @@
         </select>
       </div>
       <div class="botable" id="boTable"><div class="loading">Chargement…</div></div>
+      </div><!-- /tab-produits -->
     </div>
   </div>
 
@@ -131,6 +143,14 @@
   }
   function eur(n){ return Number(n).toFixed(2).replace('.',',') + ' €'; }
   function toast(){ const t=document.getElementById('savedToast'); t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1400); }
+
+  function showTab(name, btn){
+    document.querySelectorAll('.tab-pane').forEach(p=>p.classList.add('hidden'));
+    const pane = document.getElementById('tab-'+name); if(pane) pane.classList.remove('hidden');
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    if(btn) btn.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
 
   /* ---------- AUTH ---------- */
   async function checkSession(){
@@ -294,7 +314,7 @@
         <div class="pname"><label class="pemoji photo-upload" style="background:${p.color||'#EFE2CC'}" title="Cliquez pour ajouter ou changer la photo">${visual}<span class="photo-cam">📷</span><input type="file" accept="image/*" onchange="uploadPhoto(${p.id}, this)"></label>
           <div style="flex:1;min-width:0">
             <input class="edit-name" value="${nameSafe}" onchange="renameProduct(${p.id}, this.value)" aria-label="Nom du produit">
-            <div class="pcat">${p.category}</div>
+            <div class="pcat">${p.category} · <select class="edit-unit" onchange="setUnit(${p.id}, this.value)" aria-label="Unité">${unitOptions(p.unit)}</select></div>
           </div></div>
         <div class="colhide"><div class="edit-price"><input type="number" step="0.10" min="0" value="${p.price||0}" onchange="setPrice(${p.id}, this.value)" aria-label="Prix">€</div></div>
         <div class="qtybox">
@@ -323,6 +343,23 @@
     const p = products.find(x=>x.id===id); if(p) p.price = price;
     const { error } = await sb.from('products').update({ price }).eq('id', id);
     if(error){ alert('Erreur : '+error.message); } else { toast(); }
+  }
+
+  /* ---------- Unité de vente (menu déroulant) ---------- */
+  const UNIT_OPTIONS = ["À la pièce","Le kg","g","kg","L","cl","ml","Sachet","Barquette","Lot"];
+  function unitOptions(current){
+    const cur = current==null ? '' : String(current);
+    let opts = UNIT_OPTIONS.slice();
+    if(cur && !opts.includes(cur)) opts = [cur, ...opts];   // garde une valeur existante non listée
+    let html = `<option value="" ${cur===''?'selected':''}>— unité —</option>`;
+    html += opts.map(u=>`<option value="${u.replace(/"/g,'&quot;')}" ${u===cur?'selected':''}>${u}</option>`).join('');
+    return html;
+  }
+  async function setUnit(id, val){
+    const unit = val||'';
+    const p = products.find(x=>x.id===id); if(p) p.unit = unit;
+    const { error } = await sb.from('products').update({ unit }).eq('id', id);
+    if(error){ alert('Erreur : '+error.message); } else { toast(); renderShoppingList(); }
   }
 
   /* ---------- Photo : redimensionnement carré + upload ---------- */
