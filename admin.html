@@ -55,6 +55,45 @@
         </label>
       </div>
 
+      <div class="svc-admin about-admin">
+        <h3>🎨 Logos du site</h3>
+        <p class="svc-admin-sub">Cliquez sur un logo pour le remplacer. Le changement s'affiche aussitôt sur le site. Astuce : utilisez des images à fond transparent (PNG) pour un rendu propre.</p>
+        <div class="logo-slots">
+          <div class="logo-slot">
+            <span class="logo-slot-label">Logo carré (ordinateur)</span>
+            <label class="about-photo logo-box" title="Changer le logo carré">
+              <img id="prevCarre" src="logo-carre.webp" alt="Logo carré">
+              <span class="about-cam">📷</span>
+              <input type="file" accept="image/*" onchange="uploadLogo('logo_carre', this, 'prevCarre')">
+            </label>
+          </div>
+          <div class="logo-slot">
+            <span class="logo-slot-label">Logo paysage (mobile / pied de page)</span>
+            <label class="about-photo logo-box" title="Changer le logo paysage">
+              <img id="prevPaysage" src="logo-paysage.webp" alt="Logo paysage">
+              <span class="about-cam">📷</span>
+              <input type="file" accept="image/*" onchange="uploadLogo('logo_paysage', this, 'prevPaysage')">
+            </label>
+          </div>
+          <div class="logo-slot">
+            <span class="logo-slot-label">Logo MoneyGram</span>
+            <label class="about-photo logo-box" title="Changer le logo MoneyGram">
+              <img id="prevMG" src="moneygram.png" alt="Logo MoneyGram">
+              <span class="about-cam">📷</span>
+              <input type="file" accept="image/*" onchange="uploadLogo('logo_moneygram', this, 'prevMG')">
+            </label>
+          </div>
+          <div class="logo-slot">
+            <span class="logo-slot-label">Logo RIA</span>
+            <label class="about-photo logo-box" title="Changer le logo RIA">
+              <img id="prevRIA" src="ria.png" alt="Logo RIA">
+              <span class="about-cam">📷</span>
+              <input type="file" accept="image/*" onchange="uploadLogo('logo_ria', this, 'prevRIA')">
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
 
       <div class="shop-list">
@@ -69,6 +108,9 @@
       </div>
       <div class="bo-tools">
         <div class="search"><span>🔍</span><input type="text" id="boSearch" placeholder="Rechercher un produit…" oninput="renderBO()"></div>
+        <select class="bo-filter" id="boCat" onchange="renderBO()">
+          <option value="">Toutes les catégories</option>
+        </select>
       </div>
       <div class="botable" id="boTable"><div class="loading">Chargement…</div></div>
     </div>
@@ -102,15 +144,22 @@
     document.getElementById('who').textContent = 'Connecté : ' + (user?.email||'');
     loadProducts();
     loadServicesAdmin();
-    loadAboutImage();
+    loadSiteImages();
   }
 
-  /* ---------- Photo "À propos" (réglages du site) ---------- */
-  async function loadAboutImage(){
+  /* ---------- Photos & logos (réglages du site) ---------- */
+  async function loadSiteImages(){
     try {
-      const { data, error } = await sb.from('settings').select('*').eq('key','about_image').maybeSingle();
-      if(!error && data && data.value){ document.getElementById('aboutPreview').src = data.value; }
-    } catch(e){ console.warn('about:', e); }
+      const { data, error } = await sb.from('settings').select('*');
+      if(error || !data) return;
+      const map = {}; data.forEach(r=> map[r.key] = r.value);
+      const set = (id,v)=>{ if(v){ const el=document.getElementById(id); if(el) el.src=v; } };
+      set('aboutPreview', map.about_image);
+      set('prevCarre',    map.logo_carre);
+      set('prevPaysage',  map.logo_paysage);
+      set('prevMG',       map.logo_moneygram);
+      set('prevRIA',      map.logo_ria);
+    } catch(e){ console.warn('settings:', e); }
   }
   async function uploadAboutImage(input){
     const file = input.files && input.files[0]; if(!file) return;
@@ -133,6 +182,43 @@
       box.classList.remove('uploading'); input.value='';
     }
   }
+  // Redimensionne en conservant la transparence (PNG) pour les logos
+  function resizeLogo(file, maxSize){
+    return new Promise((resolve, reject)=>{
+      const img = new Image(); const url = URL.createObjectURL(file);
+      img.onload = ()=>{
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxSize/Math.max(img.width, img.height));
+        const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+        const c = document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);   // pas de fond blanc -> garde la transparence
+        c.toBlob(b=> b?resolve(b):reject(new Error('conversion')), 'image/png');
+      };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); reject(new Error('image illisible')); };
+      img.src = url;
+    });
+  }
+  async function uploadLogo(key, input, previewId){
+    const file = input.files && input.files[0]; if(!file) return;
+    if(!file.type.startsWith('image/')){ alert('Veuillez choisir une image.'); input.value=''; return; }
+    const box = input.closest('.about-photo'); if(box) box.classList.add('uploading');
+    try {
+      const blob = await resizeLogo(file, 600);
+      const path = `${key}-${Date.now()}.png`;
+      const { error: upErr } = await sb.storage.from('produits').upload(path, blob, { contentType:'image/png', upsert:true, cacheControl:'3600' });
+      if(upErr) throw upErr;
+      const { data } = sb.storage.from('produits').getPublicUrl(path);
+      const url = data.publicUrl;
+      const { error } = await sb.from('settings').upsert({ key, value:url });
+      if(error) throw error;
+      document.getElementById(previewId).src = url;
+      toast();
+    } catch(e){
+      alert('Erreur logo : ' + (e.message||e) + '\n(Avez-vous lancé settings.sql et storage.sql dans Supabase ?)');
+    } finally {
+      if(box) box.classList.remove('uploading'); input.value='';
+    }
+  }
   async function doLogin(){
     const email=document.getElementById('email').value.trim();
     const password=document.getElementById('password').value;
@@ -151,7 +237,14 @@
   async function loadProducts(){
     const { data, error } = await sb.from('products').select('*').order('sort_order',{ascending:true});
     if(error){ document.getElementById('boTable').innerHTML='<div class="loading">⚠️ Erreur de chargement. Vérifie config.js.</div>'; console.error(error); return; }
-    products = data||[]; renderBO();
+    products = data||[]; fillCatFilter(); renderBO();
+  }
+  function fillCatFilter(){
+    const sel = document.getElementById('boCat'); if(!sel) return;
+    const cats = [...new Set(products.map(p=>p.category))].sort((a,b)=>a.localeCompare(b,'fr'));
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Toutes les catégories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+    sel.value = current;
   }
 
   /* ---------- SERVICES DE TRANSFERT ---------- */
@@ -190,7 +283,8 @@
 
   function renderBO(){
     const q=(document.getElementById('boSearch').value||"").toLowerCase();
-    const list=products.filter(p=>p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q));
+    const cat=(document.getElementById('boCat')||{}).value||"";
+    const list=products.filter(p=>(p.name.toLowerCase().includes(q)||p.category.toLowerCase().includes(q)) && (!cat || p.category===cat));
     let rows = `<div class="borow head"><div>Produit (cliquez pour renommer)</div><div class="colhide">Prix (€)</div><div>Quantité</div><div>Disponibilité</div><div>Sur le site</div></div>`;
     rows += list.map(p=>{
       const s=statusOf(p.qty);
@@ -329,7 +423,12 @@
     if(error){ alert('Erreur : '+error.message); } else { toast(); }
   }
 
+  // Bouton "retour en haut"
+  const boTop = document.getElementById('boTop');
+  window.addEventListener('scroll', ()=>{ boTop.classList.toggle('show', window.scrollY > 320); });
+
   checkSession();
 </script>
+<button class="bo-totop" id="boTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Remonter en haut de la page">↑</button>
 </body>
 </html>
