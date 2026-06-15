@@ -324,13 +324,22 @@
     renderFilters(); renderGrid();
   }
   loadProducts();
-  loadServices();
-  loadSettings();
+  initSettingsThenServices();
 
+  async function initSettingsThenServices(){
+    await loadSettings();
+    loadServices();
+  }
   async function loadSettings(){
     try {
-      const { data, error } = await sb.from('settings').select('*').eq('key','about_image').maybeSingle();
-      if(!error && data && data.value){ const el=document.getElementById('aboutImg'); if(el) el.src = data.value; }
+      const { data, error } = await sb.from('settings').select('*');
+      if(error || !data) return;
+      const map = {}; data.forEach(r=> map[r.key] = r.value);
+      if(map.about_image){ const el=document.getElementById('aboutImg'); if(el) el.src = map.about_image; }
+      if(map.logo_carre){ document.querySelectorAll('.logo-square').forEach(i=> i.src = map.logo_carre); }
+      if(map.logo_paysage){ document.querySelectorAll('.logo-landscape, .footer-logo img').forEach(i=> i.src = map.logo_paysage); }
+      if(map.logo_moneygram){ TRANSFER_LOGOS.moneygram = map.logo_moneygram; }
+      if(map.logo_ria){ TRANSFER_LOGOS.ria = map.logo_ria; }
     } catch(e){ console.warn('settings:', e); }
   }
 
