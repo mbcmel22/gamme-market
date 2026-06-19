@@ -107,6 +107,19 @@
       <div class="tab-pane" id="tab-produits">
       <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
 
+      <details class="import-box">
+        <summary>📥 Importer des produits (depuis Google Sheets / Excel)</summary>
+        <div class="import-inner">
+          <p class="svc-admin-sub">Dans votre tableau, gardez une <b>ligne d'en-tête</b> avec ces colonnes : <b>Catégorie · Marque · Nom du produit · Conditionnement · Prix · Unité · Quantité</b>. Sélectionnez les cellules (en-tête compris), copiez-les (Ctrl+C), puis collez-les ci-dessous. La <b>marque</b> et le <b>conditionnement</b> sont automatiquement intégrés au nom du produit pour le référencement.</p>
+          <textarea id="importArea" placeholder="Collez ici les lignes copiées depuis Google Sheets…"></textarea>
+          <div class="import-actions">
+            <button class="btn ghost" onclick="previewImport()">👁️ Aperçu</button>
+            <button class="btn" id="importBtn" onclick="runImport()" disabled>📥 Importer</button>
+          </div>
+          <div id="importPreview"></div>
+        </div>
+      </details>
+
       <div class="shop-list">
         <div class="shop-list-head">
           <div>
@@ -314,7 +327,7 @@
         <div class="pname"><label class="pemoji photo-upload" style="background:${p.color||'#EFE2CC'}" title="Cliquez pour ajouter ou changer la photo">${visual}<span class="photo-cam">📷</span><input type="file" accept="image/*" onchange="uploadPhoto(${p.id}, this)"></label>
           <div style="flex:1;min-width:0">
             <input class="edit-name" value="${nameSafe}" onchange="renameProduct(${p.id}, this.value)" aria-label="Nom du produit">
-            <div class="pcat">${p.category} · <select class="edit-unit" onchange="setUnit(${p.id}, this.value)" aria-label="Unité">${unitOptions(p.unit)}</select></div>
+            <div class="pcat"><select class="edit-unit edit-cat" onchange="setCategory(${p.id}, this.value)" aria-label="Catégorie">${catOptions(p.category)}</select> · <select class="edit-unit" onchange="setUnit(${p.id}, this.value)" aria-label="Unité">${unitOptions(p.unit)}</select></div>
           </div></div>
         <div class="colhide"><div class="edit-price"><input type="number" step="0.10" min="0" value="${p.price||0}" onchange="setPrice(${p.id}, this.value)" aria-label="Prix">€</div></div>
         <div class="qtybox">
@@ -329,6 +342,30 @@
     document.getElementById('boTable').innerHTML = rows;
     renderStats();
     renderShoppingList();
+  }
+
+  /* ---------- Catégorie : menu déroulant + nouvelle catégorie ---------- */
+  function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function catOptions(current){
+    const list = [...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+    if(current && !list.includes(current)) list.unshift(current);
+    let html = list.map(c=>`<option value="${esc(c)}" ${c===current?'selected':''}>${esc(c)}</option>`).join('');
+    html += `<option value="__new__">➕ Nouvelle catégorie…</option>`;
+    return html;
+  }
+  async function setCategory(id, val){
+    if(val==='__new__'){
+      const name = (prompt('Nom de la nouvelle catégorie :')||'').trim();
+      if(!name){ renderBO(); return; }          // annulé : on remet l'affichage
+      return applyCategory(id, name);
+    }
+    return applyCategory(id, val);
+  }
+  async function applyCategory(id, category){
+    const p = products.find(x=>x.id===id); if(p) p.category = category;
+    const { error } = await sb.from('products').update({ category }).eq('id', id);
+    if(error){ alert('Erreur : '+error.message); }
+    else { toast(); fillCatFilter(); renderBO(); }   // le nouveau filtre apparaît aussitôt (ici + sur le site)
   }
 
   /* ---------- Renommer / changer le prix d'un produit ---------- */
@@ -436,6 +473,81 @@
     a.download = `liste-courses-gamme-market-${new Date().toISOString().slice(0,10)}.txt`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(a.href);
+  }
+
+  /* ---------- Import de produits (copier-coller Google Sheets) ---------- */
+  function impNorm(s){ return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+  function impSquash(s){ return impNorm(s).replace(/[^a-z0-9]/g,''); }
+  function composeName(marque, nom, cond){
+    let name = (nom||'').trim();
+    const mk = (marque||'').trim(), cd = (cond||'').trim();
+    if(mk && !impSquash(name).includes(impSquash(mk))) name = mk + ' ' + name;
+    if(cd && !impSquash(name).includes(impSquash(cd))) name = name + ' ' + cd;
+    return name.replace(/\s+/g,' ').trim();
+  }
+  function parseImport(text){
+    const lines = (text||'').replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='');
+    if(lines.length < 2) return { error:"Collez au moins une ligne d'en-tête + une ligne de produit." };
+    const delim = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
+    const cells = lines.map(l=>l.split(delim));
+    const H = cells[0].map(impSquash);
+    const find = (...cands)=>{ const cs = cands.map(impSquash); for(let i=0;i<H.length;i++){ if(cs.includes(H[i])) return i; } return -1; };
+    const ci = {
+      cat:    find('categorie','category','rayon'),
+      marque: find('marque','brand'),
+      nom:    find('nom','nomduproduit','produit','designation','nomcomplet','name'),
+      cond:   find('conditionnement','format','formatpoids','poids'),
+      prix:   find('prix','prixunit','prixunitaire','price','prixe'),
+      unit:   find('unite','unitedevente','unit'),
+      qty:    find('quantite','qty','qte','stock')
+    };
+    if(ci.nom < 0) return { error:"Colonne « Nom du produit » introuvable dans l'en-tête." };
+    const rows = [];
+    for(let r=1; r<cells.length; r++){
+      const row = cells[r];
+      const get = i => (i>=0 && i<row.length) ? (row[i]||'').trim() : '';
+      const nom = get(ci.nom); if(!nom) continue;
+      const name = composeName(get(ci.marque), nom, get(ci.cond));
+      const priceRaw = get(ci.prix).replace(',','.').replace(/[^0-9.]/g,'');
+      const price = priceRaw ? Math.max(0, parseFloat(priceRaw)||0) : 0;
+      const qtyRaw = get(ci.qty).replace(/[^0-9]/g,'');
+      const qty = qtyRaw ? parseInt(qtyRaw,10) : 0;
+      const unit = get(ci.unit) || 'À la pièce';
+      const category = get(ci.cat) || 'Divers';
+      rows.push({ name, category, price, unit, qty, visible:true, color:'#EFE2CC' });
+    }
+    if(!rows.length) return { error:"Aucune ligne de produit valide détectée." };
+    return { rows };
+  }
+  let _importRows = null;
+  function previewImport(){
+    const res = parseImport(document.getElementById('importArea').value);
+    const box = document.getElementById('importPreview');
+    const btn = document.getElementById('importBtn');
+    if(res.error){ box.innerHTML = `<div class="import-msg err">⚠️ ${res.error}</div>`; btn.disabled = true; _importRows = null; return; }
+    _importRows = res.rows;
+    const head = '<tr><th>Nom (final)</th><th>Catégorie</th><th>Prix</th><th>Unité</th><th>Qté</th></tr>';
+    const body = res.rows.slice(0,8).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.category)}</td><td>${r.price?eur(r.price):'—'}</td><td>${esc(r.unit)}</td><td>${r.qty}</td></tr>`).join('');
+    box.innerHTML = `<div class="import-msg ok">✅ ${res.rows.length} produit(s) prêt(s). Aperçu :</div>
+      <div class="import-table-wrap"><table class="import-table">${head}${body}</table>
+      ${res.rows.length>8?`<p class="import-more">… et ${res.rows.length-8} autre(s).</p>`:''}</div>`;
+    btn.disabled = false;
+  }
+  async function runImport(){
+    const rows = _importRows || [];
+    if(!rows.length){ alert("Cliquez d'abord sur « Aperçu »."); return; }
+    const btn = document.getElementById('importBtn'); btn.disabled = true; btn.textContent = 'Import…';
+    const base = products.reduce((m,p)=>Math.max(m, p.sort_order||0), 0);
+    const payload = rows.map((r,i)=>({ ...r, sort_order: base + 1 + i }));
+    const { error } = await sb.from('products').insert(payload);
+    btn.textContent = '📥 Importer';
+    if(error){ alert('Erreur import : '+error.message); btn.disabled = false; return; }
+    document.getElementById('importArea').value = '';
+    document.getElementById('importPreview').innerHTML = '';
+    _importRows = null;
+    await loadProducts();
+    toast();
+    alert(rows.length + ' produit(s) importé(s) ✅');
   }
 
   /* ---------- ÉCRITURE (sauvegarde en base) ---------- */
