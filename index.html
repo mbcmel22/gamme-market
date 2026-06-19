@@ -56,10 +56,10 @@
         <img src="logo-paysage.webp" alt="Gamme Market" class="logo-landscape">
       </a>
       <nav class="navlinks">
-        <a href="#produits">Nos produits</a>
+        <a href="#produits">Alimentaire</a>
+        <a href="#beaute">Cosmétiques</a>
         <a href="#services">Services</a>
         <a href="#apropos">À propos</a>
-        <a href="#avis">Avis</a>
         <a href="#infos">Infos &amp; horaires</a>
       </nav>
       <div class="nav-actions">
@@ -67,7 +67,8 @@
       </div>
     </div>
     <nav class="mobile-menu" id="mobileMenu">
-      <a href="#produits" onclick="closeMenu()">Nos produits</a>
+      <a href="#produits" onclick="closeMenu()">Alimentaire</a>
+      <a href="#beaute" onclick="closeMenu()">Cosmétiques</a>
       <a href="#services" onclick="closeMenu()">Services</a>
       <a href="#apropos" onclick="closeMenu()">À propos</a>
       <a href="#avis" onclick="closeMenu()">Avis</a>
@@ -101,7 +102,7 @@
   <section id="produits">
     <div class="wrap">
       <div class="sec-head">
-        <span class="pill">Notre rayon</span>
+        <span class="pill">Rayon alimentaire</span>
         <h2>Les saveurs de chez vous, en stock</h2>
         <p>Une sélection de produits africains et exotiques mise à jour en temps réel. Disponibilité indiquée pour chaque article.</p>
       </div>
@@ -126,6 +127,22 @@
         <button class="car-arrow next" id="carNext" onclick="scrollCar(1)" aria-label="Produits suivants">›</button>
       </div>
       <p class="swipe-hint">← Faites glisser pour parcourir les produits →</p>
+    </div>
+  </section>
+
+  <section id="beaute" style="display:none">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="pill" style="background:var(--sand);color:var(--terra-dk)">Beauté &amp; soins</span>
+        <h2>Cosmétiques, produits &amp; accessoires beauté</h2>
+        <p>Beurre de karité, savon noir, soins capillaires et accessoires : prenez soin de vous avec nos produits authentiques.</p>
+      </div>
+      <div class="carousel">
+        <button class="car-arrow prev" onclick="scrollCar(-1,'beauteGrid')" aria-label="Produits précédents">‹</button>
+        <div class="car-track" id="beauteGrid"></div>
+        <button class="car-arrow next" onclick="scrollCar(1,'beauteGrid')" aria-label="Produits suivants">›</button>
+      </div>
+      <p class="swipe-hint">← Faites glisser pour parcourir →</p>
     </div>
   </section>
 
@@ -256,9 +273,14 @@
 <script src="config.js"></script>
 <script>
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const cats = ["Tous","Fruits & légumes","Riz & céréales","Épicerie","Huiles & sauces","Boissons","Apéritifs","Surgelés","Cosmétiques"];
+  const norm = s => (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  // Un produit est "beauté" si sa catégorie évoque cosmétiques / beauté / hygiène
+  const isBeauty = cat => { const c = norm(cat); return c.includes('cosmetique')||c.includes('beaute')||c.includes('hygiene'); };
+  let cats = ["Tous"];               // filtres du rayon alimentaire (construits depuis les produits)
   let activeCat = "Tous";
-  let allProducts = [];
+  let allProducts = [];              // tous les produits (pour la réservation)
+  let foodProducts = [];             // rayon alimentaire
+  let beautyProducts = [];           // cosmétiques & beauté
   let searchQuery = "";
 
   function statusOf(qty){
@@ -268,9 +290,15 @@
   }
   function eur(n){ return Number(n).toFixed(2).replace('.',',') + ' €'; }
 
+  function buildFoodCats(){
+    const set = [...new Set(foodProducts.map(p=>p.category).filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,'fr'));
+    cats = ["Tous", ...set];
+    if(!cats.includes(activeCat)) activeCat = "Tous";
+  }
   function renderFilters(){
     document.getElementById('filterMenu').innerHTML = cats.map(c=>
-      `<button class="filter-opt ${c===activeCat?'active':''}" onclick="setCat('${c}')">${c}</button>`).join('');
+      `<button class="filter-opt ${c===activeCat?'active':''}" onclick="setCat('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
     document.getElementById('filterCurrent').textContent = activeCat;
   }
   function toggleFilter(){ document.getElementById('filterMenu').classList.toggle('open'); }
@@ -281,20 +309,12 @@
     renderFilters(); renderGrid();
   }
 
-  function renderGrid(){
-    const list = searchQuery
-      ? allProducts.filter(p=>p.name.toLowerCase().includes(searchQuery))
-      : allProducts.filter(p=>activeCat==="Tous"||p.category===activeCat);
-    const grid = document.getElementById('prodGrid');
-    document.getElementById('resultCount').textContent =
-      list.length ? `${list.length} produit${list.length>1?'s':''}` : "";
-    if(!list.length){ grid.innerHTML = '<div class="loading">Aucun produit ne correspond à votre recherche.</div>'; return; }
-    grid.innerHTML = list.map(p=>{
-      const s=statusOf(p.qty);
-      const qtyTxt = p.qty>0 ? `<span class="unit" style="font-size:.75rem">· ${p.qty} en rayon</span>` : "";
-      const visual = p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="thumb-img" loading="lazy">` : `<span class="thumb-emoji">${p.emoji||'🛒'}</span>`;
-      const priceTxt = (p.price && p.price>0) ? eur(p.price) : 'Prix en magasin';
-      return `<article class="prod" onclick="openReserve(${p.id})">
+  function productCard(p){
+    const s = statusOf(p.qty);
+    const qtyTxt = p.qty>0 ? `<span class="unit" style="font-size:.75rem">· ${p.qty} en rayon</span>` : "";
+    const visual = p.image_url ? `<img src="${p.image_url}" alt="${p.name}" class="thumb-img" loading="lazy">` : `<span class="thumb-emoji">${p.emoji||'🛒'}</span>`;
+    const priceTxt = (p.price && p.price>0) ? eur(p.price) : 'Prix en magasin';
+    return `<article class="prod" onclick="openReserve(${p.id})">
         <div class="thumb ${p.image_url?'has-photo':''}" style="${p.image_url?'':'background:'+(p.color||'#EFE2CC')}">${visual}<span class="cat-tag">${p.category}</span></div>
         <div class="body">
           <h4>${p.name}</h4>
@@ -302,13 +322,34 @@
           <div class="foot"><span class="price ${(p.price&&p.price>0)?'':'price-ask'}">${priceTxt}</span><span class="badge ${s.badge}">${s.label}</span></div>
           <span class="reserve-hint">📩 Mettre de côté →</span>
         </div></article>`;
-    }).join('');
+  }
+
+  function renderGrid(){
+    const list = searchQuery
+      ? foodProducts.filter(p=>p.name.toLowerCase().includes(searchQuery))
+      : foodProducts.filter(p=>activeCat==="Tous"||p.category===activeCat);
+    const grid = document.getElementById('prodGrid');
+    document.getElementById('resultCount').textContent =
+      list.length ? `${list.length} produit${list.length>1?'s':''}` : "";
+    if(!list.length){ grid.innerHTML = '<div class="loading">Aucun produit ne correspond à votre recherche.</div>'; return; }
+    grid.innerHTML = list.map(productCard).join('');
+    grid.scrollTo({left:0});
+  }
+
+  function renderBeauty(){
+    const sec = document.getElementById('beaute');
+    const grid = document.getElementById('beauteGrid');
+    if(!sec || !grid) return;
+    if(!beautyProducts.length){ sec.style.display='none'; return; }
+    sec.style.display = '';
+    grid.innerHTML = beautyProducts.map(productCard).join('');
     grid.scrollTo({left:0});
   }
 
   // Carrousel : flèches (ordinateur) — le swipe fonctionne nativement sur mobile
-  function scrollCar(dir){
-    const t = document.getElementById('prodGrid');
+  function scrollCar(dir, trackId){
+    const t = document.getElementById(trackId || 'prodGrid');
+    if(!t) return;
     t.scrollBy({ left: dir * Math.min(t.clientWidth*0.85, 540), behavior:'smooth' });
   }
 
@@ -321,7 +362,10 @@
       console.error(error); return;
     }
     allProducts = data || [];
-    renderFilters(); renderGrid();
+    foodProducts   = allProducts.filter(p=>!isBeauty(p.category));
+    beautyProducts = allProducts.filter(p=> isBeauty(p.category));
+    buildFoodCats();
+    renderFilters(); renderGrid(); renderBeauty();
   }
   loadProducts();
   initSettingsThenServices();
