@@ -415,3 +415,22 @@ footer a:hover{color:var(--gold)}
 .tab-pane.hidden{display:none}
 .edit-unit{font-family:inherit;font-size:.8rem;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:2px 6px;background:#fff;cursor:pointer;outline:0;max-width:135px;vertical-align:middle}
 .edit-unit:focus{border-color:var(--terra);color:var(--ink)}
+
+/* ===== Back-office : import de produits + catégorie modifiable ===== */
+.import-box{background:#fff;border:1px solid #eadfce;border-radius:16px;margin:0 0 22px;overflow:hidden}
+.import-box>summary{cursor:pointer;list-style:none;padding:15px 20px;font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;color:#1B5E20}
+.import-box>summary::-webkit-details-marker{display:none}
+.import-box[open]>summary{border-bottom:1px solid #f0e9da}
+.import-inner{padding:14px 20px 20px}
+#importArea{width:100%;min-height:120px;border:1px solid #d9d2c4;border-radius:12px;padding:10px 12px;font-family:inherit;font-size:.9rem;resize:vertical;box-sizing:border-box}
+#importArea:focus{outline:none;border-color:#1B5E20}
+.import-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.import-msg{margin-top:14px;font-size:.92rem;font-weight:600}
+.import-msg.ok{color:#1B5E20}
+.import-msg.err{color:#b3261e}
+.import-table-wrap{margin-top:10px;overflow:auto}
+.import-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.import-table th,.import-table td{text-align:left;padding:6px 10px;border-bottom:1px solid #f0e9da;white-space:nowrap}
+.import-table th{font-weight:700;background:#faf7f0}
+.import-more{font-size:.82rem;color:#888;margin-top:6px}
+.edit-cat{max-width:170px;font-weight:600}
