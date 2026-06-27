@@ -116,7 +116,7 @@
           </div>
           <div class="prod-search">
             <span>🔍</span>
-            <input type="text" class="search-input" placeholder="Rechercher un produit…" oninput="onSearch(this.value)" aria-label="Rechercher un produit">
+            <input type="text" id="searchFood" class="search-input" placeholder="Rechercher un produit…" oninput="onSearch(this.value)" aria-label="Rechercher un produit">
           </div>
         </div>
         <span class="result-count" id="resultCount"></span>
@@ -136,6 +136,21 @@
         <span class="pill" style="background:var(--sand);color:var(--terra-dk)">Beauté &amp; soins</span>
         <h2>Cosmétiques, produits &amp; accessoires beauté</h2>
         <p>Beurre de karité, savon noir, soins capillaires et accessoires : prenez soin de vous avec nos produits authentiques.</p>
+      </div>
+      <div class="prod-toolbar">
+        <div class="toolbar-left">
+          <div class="filter-wrap">
+            <button class="filter-btn" id="filterBtnB" onclick="toggleBeautyFilter()" aria-haspopup="true">
+              <span>🗂️ Filtrer</span><span class="filter-current" id="filterCurrentB">Tous</span><span class="caret">▾</span>
+            </button>
+            <div class="filter-menu" id="filterMenuB"></div>
+          </div>
+          <div class="prod-search">
+            <span>🔍</span>
+            <input type="text" id="searchBeauty" class="search-input" placeholder="Rechercher un produit…" oninput="onBeautySearch(this.value)" aria-label="Rechercher un produit beauté">
+          </div>
+        </div>
+        <span class="result-count" id="resultCountB"></span>
       </div>
       <div class="carousel">
         <button class="car-arrow prev" onclick="scrollCar(-1,'beauteGrid')" aria-label="Produits précédents">‹</button>
@@ -304,7 +319,7 @@
   function toggleFilter(){ document.getElementById('filterMenu').classList.toggle('open'); }
   function setCat(c){
     activeCat=c; searchQuery="";
-    document.querySelectorAll('.search-input').forEach(i=>i.value="");
+    const si=document.getElementById('searchFood'); if(si) si.value="";
     document.getElementById('filterMenu').classList.remove('open');
     renderFilters(); renderGrid();
   }
@@ -320,7 +335,7 @@
           <h4>${p.name}</h4>
           <span class="unit">${p.unit||''} ${qtyTxt}</span>
           <div class="foot"><span class="price ${(p.price&&p.price>0)?'':'price-ask'}">${priceTxt}</span><span class="badge ${s.badge}">${s.label}</span></div>
-          <span class="reserve-hint">📩 Mettre de côté →</span>
+          <button class="reserve-btn" type="button">Mettre de côté →</button>
         </div></article>`;
   }
 
@@ -336,13 +351,45 @@
     grid.scrollTo({left:0});
   }
 
+  /* ---- Filtres & recherche : section Cosmétiques & Beauté ---- */
+  let beautyCats = ["Tous"];
+  let activeBeautyCat = "Tous";
+  let beautySearch = "";
+  function buildBeautyCats(){
+    const set = [...new Set(beautyProducts.map(p=>p.category).filter(Boolean))]
+      .sort((a,b)=>a.localeCompare(b,'fr'));
+    beautyCats = ["Tous", ...set];
+    if(!beautyCats.includes(activeBeautyCat)) activeBeautyCat = "Tous";
+  }
+  function renderBeautyFilters(){
+    const menu = document.getElementById('filterMenuB');
+    if(!menu) return;
+    menu.innerHTML = beautyCats.map(c=>
+      `<button class="filter-opt ${c===activeBeautyCat?'active':''}" onclick="setBeautyCat('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+    document.getElementById('filterCurrentB').textContent = activeBeautyCat;
+  }
+  function toggleBeautyFilter(){ document.getElementById('filterMenuB').classList.toggle('open'); }
+  function setBeautyCat(c){
+    activeBeautyCat = c; beautySearch = "";
+    const si = document.getElementById('searchBeauty'); if(si) si.value = "";
+    document.getElementById('filterMenuB').classList.remove('open');
+    renderBeautyFilters(); renderBeauty();
+  }
+  function onBeautySearch(v){ beautySearch = v.toLowerCase().trim(); renderBeauty(); }
+
   function renderBeauty(){
     const sec = document.getElementById('beaute');
     const grid = document.getElementById('beauteGrid');
     if(!sec || !grid) return;
     if(!beautyProducts.length){ sec.style.display='none'; return; }
     sec.style.display = '';
-    grid.innerHTML = beautyProducts.map(productCard).join('');
+    const list = beautySearch
+      ? beautyProducts.filter(p=>p.name.toLowerCase().includes(beautySearch))
+      : beautyProducts.filter(p=>activeBeautyCat==="Tous"||p.category===activeBeautyCat);
+    const rc = document.getElementById('resultCountB');
+    if(rc) rc.textContent = list.length ? `${list.length} produit${list.length>1?'s':''}` : "";
+    if(!list.length){ grid.innerHTML = '<div class="loading">Aucun produit ne correspond à votre recherche.</div>'; return; }
+    grid.innerHTML = list.map(productCard).join('');
     grid.scrollTo({left:0});
   }
 
@@ -365,7 +412,9 @@
     foodProducts   = allProducts.filter(p=>!isBeauty(p.category));
     beautyProducts = allProducts.filter(p=> isBeauty(p.category));
     buildFoodCats();
-    renderFilters(); renderGrid(); renderBeauty();
+    renderFilters(); renderGrid();
+    buildBeautyCats();
+    renderBeautyFilters(); renderBeauty();
   }
   loadProducts();
   initSettingsThenServices();
