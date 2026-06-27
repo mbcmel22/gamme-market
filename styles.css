@@ -90,8 +90,8 @@ header.nav{position:relative;z-index:150;background:var(--bg);border-bottom:1px 
 @media(max-width:820px){.hero .wrap{grid-template-columns:1fr;padding:48px 24px 56px}}
 
 /* sections */
-section{padding:78px 0}
-.sec-head{max-width:640px;margin-bottom:38px}
+section{padding:52px 0}
+.sec-head{max-width:640px;margin-bottom:30px}
 .sec-head .pill{background:var(--sand);color:var(--terra-dk)}
 .sec-head h2{font-size:clamp(2rem,4vw,2.9rem);margin:14px 0 12px;letter-spacing:-.02em}
 .sec-head p{color:var(--muted);font-size:1.05rem}
@@ -130,7 +130,7 @@ section{padding:78px 0}
 @media(min-width:821px){ .car-arrow{display:flex} .swipe-hint{display:none} }
 .prod{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:.25s;display:flex;flex-direction:column}
 .car-track .prod{flex:0 0 250px;width:250px;scroll-snap-align:start;cursor:pointer}
-.reserve-btn{margin-top:10px;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--terra);border:1.5px solid var(--terra);border-radius:100px;padding:7px 15px;font-family:inherit;font-weight:700;font-size:.78rem;cursor:pointer;transition:.2s}
+.reserve-btn{margin-top:7px;align-self:flex-start;display:inline-flex;align-items:center;background:#fff;color:var(--terra);border:1.5px solid var(--terra);border-radius:100px;padding:5px 14px;font-family:inherit;font-weight:700;font-size:.76rem;cursor:pointer;transition:.2s}
 .reserve-btn:hover{background:var(--terra-dk);border-color:var(--terra-dk);color:#fff}
 .prod:hover .reserve-btn{background:var(--terra);color:#fff;box-shadow:0 8px 18px -10px var(--terra-dk)}
 .prod:hover .reserve-btn:hover{background:var(--terra-dk);border-color:var(--terra-dk)}
@@ -141,7 +141,7 @@ section{padding:78px 0}
 .prod .thumb{height:190px;display:grid;place-items:center;font-size:3.2rem;position:relative;background:#fff}
 .prod .thumb.has-photo{background:#fff}
 .prod .cat-tag{position:absolute;top:10px;left:10px;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.85);color:var(--ink);padding:4px 9px;border-radius:100px}
-.prod .body{padding:15px 16px 17px;display:flex;flex-direction:column;gap:4px;flex:1}
+.prod .body{padding:14px 16px 14px;display:flex;flex-direction:column;gap:3px;flex:1}
 .prod h4{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;line-height:1.15}
 .prod .unit{color:var(--muted);font-size:.82rem}
 .prod .foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:11px}
