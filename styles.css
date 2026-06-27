@@ -130,8 +130,10 @@ section{padding:78px 0}
 @media(min-width:821px){ .car-arrow{display:flex} .swipe-hint{display:none} }
 .prod{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:.25s;display:flex;flex-direction:column}
 .car-track .prod{flex:0 0 250px;width:250px;scroll-snap-align:start;cursor:pointer}
-.reserve-hint{margin-top:8px;color:var(--terra);font-weight:700;font-size:.82rem;opacity:.55;transition:.2s}
-.prod:hover .reserve-hint{opacity:1}
+.reserve-btn{margin-top:10px;align-self:flex-start;display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--terra);border:1.5px solid var(--terra);border-radius:100px;padding:7px 15px;font-family:inherit;font-weight:700;font-size:.78rem;cursor:pointer;transition:.2s}
+.reserve-btn:hover{background:var(--terra-dk);border-color:var(--terra-dk);color:#fff}
+.prod:hover .reserve-btn{background:var(--terra);color:#fff;box-shadow:0 8px 18px -10px var(--terra-dk)}
+.prod:hover .reserve-btn:hover{background:var(--terra-dk);border-color:var(--terra-dk)}
 .thumb-img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:14px}
 .thumb-emoji{font-size:3.2rem}
 .price-ask{font-size:.95rem;color:var(--terra-dk)}
