@@ -18,6 +18,7 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="icon" type="image/webp" href="logo-carre.webp">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" as="image" href="logo-carre.webp" fetchpriority="high">
 <meta property="og:type" content="business.business">
 <meta property="og:site_name" content="Gamme Market">
 <meta property="og:title" content="Gamme Market · Épicerie africaine et exotique à Cholet">
@@ -77,8 +78,8 @@
   <header class="nav">
     <div class="wrap">
       <a href="#" class="logo" aria-label="Gamme Market">
-        <img src="logo-carre.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-square">
-        <img src="logo-paysage.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-landscape">
+        <img src="logo-carre.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-square" fetchpriority="high">
+        <img src="logo-paysage.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-landscape" fetchpriority="high">
       </a>
       <nav class="navlinks">
         <a href="#produits">Alimentaire</a>
@@ -276,7 +277,7 @@
           <a href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener">53 Rue Nationale, 49300 Cholet</a>
           <a href="tel:+33784576065">07 84 57 60 65</a>
           <a href="mailto:contact@gammemarket-cholet.fr">contact@gammemarket-cholet.fr</a>
-          <a href="admin.html" style="opacity:.5;font-size:.8rem;margin-top:8px">Espace gérant</a>
+          <a href="/admin" style="opacity:.5;font-size:.8rem;margin-top:8px">Espace gérant</a>
         </div>
       </div>
       <p class="seo-text">
@@ -288,7 +289,7 @@
       </p>
       <div class="copyright">
         <span>© 2026 Gamme Market · Tous droits réservés</span>
-        <span><a href="mentions-legales.html">Mentions légales</a> · <a href="politique-confidentialite.html">Politique de confidentialité</a></span>
+        <span><a href="/mentions-legales">Mentions légales</a> · <a href="/politique-confidentialite">Politique de confidentialité</a></span>
       </div>
     </div>
   </footer>
@@ -454,8 +455,14 @@
       if(error || !data) return;
       const map = {}; data.forEach(r=> map[r.key] = r.value);
       if(map.about_image){ const el=document.getElementById('aboutImg'); if(el) el.src = map.about_image; }
-      if(map.logo_carre){ document.querySelectorAll('.logo-square').forEach(i=> i.src = map.logo_carre); }
-      if(map.logo_paysage){ document.querySelectorAll('.logo-landscape, .footer-logo img').forEach(i=> i.src = map.logo_paysage); }
+      const swapLogo = (sel, url) => {
+        if(!url) return;
+        const pre = new Image();
+        pre.onload = () => document.querySelectorAll(sel).forEach(i => { i.src = url; });
+        pre.src = url;   // on n'échange que lorsque la nouvelle image est chargée
+      };
+      swapLogo('.logo-square', map.logo_carre);
+      swapLogo('.logo-landscape, .footer-logo img', map.logo_paysage);
       if(map.logo_moneygram){ TRANSFER_LOGOS.moneygram = map.logo_moneygram; }
       if(map.logo_ria){ TRANSFER_LOGOS.ria = map.logo_ria; }
       if(map.store_hours){ try { STORE_HOURS = JSON.parse(map.store_hours); applyStoreHours(); } catch(e){ console.warn('store_hours:', e); } }
@@ -617,7 +624,7 @@
         <small>Au cas où le produit ne serait plus disponible, le magasin vous prévient.</small>
       </div>
       <div class="modal-err" id="resErr"></div>
-      <label class="modal-consent"><input type="checkbox" id="resConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter en cas de retard ou d'imprévu concernant ma mise de côté. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="politique-confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
+      <label class="modal-consent"><input type="checkbox" id="resConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter en cas de retard ou d'imprévu concernant ma mise de côté. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="/politique-confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
       <p class="modal-wa-note">📲 En validant, <b>WhatsApp s'ouvre</b> avec votre message déjà rédigé. Appuyez bien sur <b>« Envoyer »</b> pour que votre réservation soit prise en compte par le magasin.</p>
       <button class="btn modal-submit" onclick="sendReserve()">Réserver via WhatsApp</button>
       ${epuise?'<p class="modal-note">Ce produit est actuellement épuisé : votre demande sera traitée dès réapprovisionnement.</p>':''}`;
