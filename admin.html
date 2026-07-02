@@ -23,8 +23,32 @@
       <p class="sub">Connectez-vous pour gérer votre stock.</p>
       <div class="login-err" id="loginErr"></div>
       <div class="field"><label>Adresse e-mail</label><input type="email" id="email" placeholder="vous@exemple.fr" autocomplete="username"></div>
-      <div class="field"><label>Mot de passe</label><input type="password" id="password" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="field"><label>Mot de passe</label>
+        <div class="pw-wrap">
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('password',this)" aria-label="Afficher ou masquer le mot de passe"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
       <button class="btn" id="loginBtn" onclick="doLogin()">Se connecter</button>
+      <button type="button" class="link-btn" onclick="forgotPassword()">Mot de passe oublié ?</button>
+      <div class="login-msg" id="loginMsg"></div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN NOUVEAU MOT DE PASSE (réinitialisation via e-mail) -->
+  <div class="login-wrap" id="resetScreen" style="display:none">
+    <div class="login-card">
+      <div class="login-logo"><img src="logo-paysage.webp" alt="Gamme Market" class="login-logo-img" onerror="this.style.display='none'"></div>
+      <h2>Nouveau mot de passe</h2>
+      <p class="sub">Choisissez le nouveau mot de passe de votre espace gérant.</p>
+      <div class="login-err" id="resetErr"></div>
+      <div class="field"><label>Nouveau mot de passe</label>
+        <div class="pw-wrap">
+          <input type="password" id="newPassword" placeholder="••••••••" autocomplete="new-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('newPassword',this)" aria-label="Afficher ou masquer le mot de passe"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button class="btn" onclick="applyNewPassword()">Enregistrer le mot de passe</button>
     </div>
   </div>
 
@@ -197,9 +221,17 @@
   }
 
   /* ---------- AUTH ---------- */
+  const isRecovery = window.location.hash.includes('type=recovery');
+  sb.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY'){ showReset(); } });
   async function checkSession(){
+    if(isRecovery){ showReset(); return; }
     const { data:{ session } } = await sb.auth.getSession();
     if(session){ showPanel(session.user); } else { showLogin(); }
+  }
+  function showReset(){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('panel').style.display='none';
+    document.getElementById('resetScreen').style.display='grid';
   }
   function showLogin(){ document.getElementById('loginScreen').style.display='grid'; document.getElementById('panel').style.display='none'; }
   function showPanel(user){
@@ -296,6 +328,36 @@
     errBox.classList.remove('show'); showPanel(data.user);
   }
   async function doLogout(){ await sb.auth.signOut(); showLogin(); }
+
+  /* ---------- Voir / réinitialiser le mot de passe ---------- */
+  function togglePw(id, btn){
+    const i = document.getElementById(id); if(!i) return;
+    const show = i.type === 'password';
+    i.type = show ? 'text' : 'password';
+    if(btn) btn.classList.toggle('on', show);
+  }
+  async function forgotPassword(){
+    const email = (document.getElementById('email').value||'').trim();
+    const err = document.getElementById('loginErr');
+    const msg = document.getElementById('loginMsg');
+    err.classList.remove('show'); msg.classList.remove('show');
+    if(!email){ err.textContent = "Entrez d'abord votre adresse e-mail ci-dessus, puis recliquez."; err.classList.add('show'); return; }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/admin' });
+    if(error){ err.textContent = error.message; err.classList.add('show'); return; }
+    msg.textContent = "E-mail de réinitialisation envoyé à " + email + ". Ouvrez le lien reçu (pensez à vérifier les spams).";
+    msg.classList.add('show');
+  }
+  async function applyNewPassword(){
+    const pw = document.getElementById('newPassword').value;
+    const err = document.getElementById('resetErr');
+    if(!pw || pw.length < 6){ err.textContent = "Le mot de passe doit faire au moins 6 caractères."; err.classList.add('show'); return; }
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if(error){ err.textContent = error.message; err.classList.add('show'); return; }
+    err.classList.remove('show');
+    alert("Mot de passe mis à jour. Vous pouvez maintenant vous connecter.");
+    document.getElementById('resetScreen').style.display = 'none';
+    showLogin();
+  }
   // permet de valider le mot de passe avec la touche Entrée
   document.addEventListener('keydown', e=>{ if(e.key==='Enter' && document.getElementById('loginScreen').style.display!=='none') doLogin(); });
 
