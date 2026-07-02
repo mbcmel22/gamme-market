@@ -503,3 +503,14 @@ footer a:hover{color:var(--gold)}
 .login-logo-img{height:46px;width:auto;display:block;margin:0 auto}
 .bo-brand{display:flex;align-items:center;gap:14px}
 .bo-logo{height:40px;width:auto;display:block;flex:0 0 auto}
+
+/* ===== Login : voir / réinitialiser le mot de passe ===== */
+.pw-wrap{position:relative}
+.pw-wrap input{width:100%;padding-right:46px;box-sizing:border-box}
+.pw-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9a9384;padding:6px;display:flex;align-items:center;border-radius:8px}
+.pw-toggle:hover{color:#6a6456}
+.pw-toggle.on{color:var(--terra)}
+.link-btn{display:inline-block;background:none;border:none;color:var(--terra);font-family:inherit;font-size:.85rem;cursor:pointer;text-decoration:underline;margin-top:14px;padding:0}
+.link-btn:hover{color:var(--terra-dk)}
+.login-msg{display:none;margin-top:14px;font-size:.85rem;color:#1B5E20;background:#E8F7EE;border:1px solid #BFE6CD;border-radius:10px;padding:9px 12px;line-height:1.45}
+.login-msg.show{display:block}
