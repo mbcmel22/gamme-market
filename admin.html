@@ -44,6 +44,7 @@
 
       <div class="tabs">
         <button class="tab-btn active" data-tab="produits" onclick="showTab('produits',this)">📦 Produits</button>
+        <button class="tab-btn" data-tab="reservations" onclick="showTab('reservations',this)">🔔 Réservations</button>
         <button class="tab-btn" data-tab="services" onclick="showTab('services',this)">💱 Services</button>
         <button class="tab-btn" data-tab="horaires" onclick="showTab('horaires',this)">🕒 Horaires</button>
         <button class="tab-btn" data-tab="apparence" onclick="showTab('apparence',this)">🎨 Logos &amp; photos</button>
@@ -74,6 +75,14 @@
           <div id="svcHoursAdmin"><div class="loading">Chargement…</div></div>
         </div>
       </div><!-- /tab-horaires -->
+
+      <div class="tab-pane hidden" id="tab-reservations">
+        <div class="svc-admin">
+          <h3>🔔 Réservations reçues</h3>
+          <p class="svc-admin-sub">Les mises de côté demandées par les clients. Contactez le client, puis cliquez « Traité » pour retirer la réservation. Elles sont de toute façon effacées automatiquement après 30 jours.</p>
+          <div id="resAdmin"><div class="loading">Chargement…</div></div>
+        </div>
+      </div><!-- /tab-reservations -->
 
       <div class="tab-pane hidden" id="tab-apparence">
       <div class="svc-admin about-admin">
@@ -145,7 +154,7 @@
       <div class="shop-list">
         <div class="shop-list-head">
           <div>
-            <h3>🛒 Produits épuisés — liste de courses</h3>
+            <h3>🛒 Produits épuisés · liste de courses</h3>
             <p class="svc-admin-sub" id="shopCount"></p>
           </div>
           <button class="btn" id="dlBtn" onclick="downloadShoppingList()">⬇️ Télécharger la liste</button>
@@ -201,6 +210,7 @@
     loadServicesAdmin();
     loadSiteImages();
     loadHours();
+    loadReservations();
   }
 
   /* ---------- Photos & logos (réglages du site) ---------- */
@@ -370,6 +380,51 @@
     if(error){ alert('Erreur : '+error.message); } else { toast(); }
   }
 
+  /* ---------- RÉSERVATIONS ---------- */
+  let resList = [];
+  async function loadReservations(){
+    const box = document.getElementById('resAdmin'); if(!box) return;
+    const { data, error } = await sb.from('reservations').select('*').order('created_at', {ascending:false});
+    if(error){
+      box.innerHTML = '<div class="loading">⚠️ Lancez d\'abord <b>purge-reservations.sql</b> dans Supabase pour créer la table des réservations.</div>';
+      console.warn('reservations:', error); return;
+    }
+    resList = data || []; renderReservations();
+  }
+  function fmtResDate(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  }
+  function renderReservations(){
+    const box = document.getElementById('resAdmin'); if(!box) return;
+    if(!resList.length){ box.innerHTML = '<div class="loading">Aucune réservation pour le moment.</div>'; return; }
+    const head = `<div class="res-count">${resList.length} réservation${resList.length>1?'s':''}</div>`;
+    box.innerHTML = head + resList.map(r=>{
+      const tel = (r.telephone||'').replace(/\s+/g,'');
+      const digits = tel.replace(/\D/g,'');
+      const wa = digits ? (digits.startsWith('0') ? '33'+digits.slice(1) : digits) : '';
+      return `<div class="res-row">
+        <div class="res-main">
+          <div class="res-top"><b>${esc(r.nom||'-')}</b><span class="res-date">${fmtResDate(r.created_at)}</span></div>
+          <div class="res-prod">${esc(r.produit||'')}${r.quantite?` · ${r.quantite} ${esc(r.unite||'')}`:''}</div>
+          <div class="res-tel">${esc(r.telephone||'-')}</div>
+        </div>
+        <div class="res-actions">
+          ${tel?`<a class="btn ghost res-btn" href="tel:${esc(tel)}">Appeler</a>`:''}
+          ${wa?`<a class="btn ghost res-btn" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}
+          <button class="btn res-btn res-del" onclick="deleteReservation(${r.id})">Traité ✓</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  async function deleteReservation(id){
+    if(!confirm('Retirer cette réservation de la liste ?')) return;
+    const { error } = await sb.from('reservations').delete().eq('id', id);
+    if(error){ alert('Erreur : '+error.message); return; }
+    resList = resList.filter(r=>r.id!==id); renderReservations(); toast();
+  }
+
   function renderStats(){
     const tot=products.length;
     const out=products.filter(p=>p.qty<=0).length;
@@ -456,7 +511,7 @@
     const cur = current==null ? '' : String(current);
     let opts = UNIT_OPTIONS.slice();
     if(cur && !opts.includes(cur)) opts = [cur, ...opts];   // garde une valeur existante non listée
-    let html = `<option value="" ${cur===''?'selected':''}>— unité —</option>`;
+    let html = `<option value="" ${cur===''?'selected':''}>Unité</option>`;
     html += opts.map(u=>`<option value="${u.replace(/"/g,'&quot;')}" ${u===cur?'selected':''}>${u}</option>`).join('');
     return html;
   }
@@ -527,7 +582,7 @@
     const out = products.filter(p=>p.qty<=0);
     if(!out.length) return;
     const d = new Date().toLocaleDateString('fr-FR');
-    let txt = `LISTE DE COURSES — GAMME MARKET\nGénérée le ${d}\n\n`;
+    let txt = `LISTE DE COURSES · GAMME MARKET\nGénérée le ${d}\n\n`;
     const byCat = {};
     out.forEach(p=>{ (byCat[p.category]=byCat[p.category]||[]).push(p); });
     Object.keys(byCat).forEach(cat=>{
@@ -595,7 +650,7 @@
     if(res.error){ box.innerHTML = `<div class="import-msg err">⚠️ ${res.error}</div>`; btn.disabled = true; _importRows = null; return; }
     _importRows = res.rows;
     const head = '<tr><th>Nom (final)</th><th>Catégorie</th><th>Prix</th><th>Unité</th><th>Qté</th></tr>';
-    const body = res.rows.slice(0,8).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.category)}</td><td>${r.price?eur(r.price):'—'}</td><td>${esc(r.unit)}</td><td>${r.qty}</td></tr>`).join('');
+    const body = res.rows.slice(0,8).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.category)}</td><td>${r.price?eur(r.price):'-'}</td><td>${esc(r.unit)}</td><td>${r.qty}</td></tr>`).join('');
     box.innerHTML = `<div class="import-msg ok">✅ ${res.rows.length} produit(s) prêt(s). Aperçu :</div>
       <div class="import-table-wrap"><table class="import-table">${head}${body}</table>
       ${res.rows.length>8?`<p class="import-more">… et ${res.rows.length-8} autre(s).</p>`:''}</div>`;
