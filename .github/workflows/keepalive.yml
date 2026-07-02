@@ -1,0 +1,25 @@
+name: Keep Supabase alive
+
+# Empêche la mise en pause du projet Supabase (plan gratuit : pause après 7 jours
+# sans activité sur la base). On interroge la base 2 fois par semaine.
+
+on:
+  schedule:
+    - cron: '0 6 * * 1,4'   # tous les lundis et jeudis à 06h00 UTC
+  workflow_dispatch:          # bouton pour lancer manuellement (test)
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping de la base Supabase
+        run: |
+          URL="https://tmtykunuhflrygbiwzka.supabase.co/rest/v1/products?select=id&limit=1"
+          KEY="sb_publishable_Y-S6kayOP_rjm4EkxuwnuA_NmEl0wtN"
+          code=$(curl -sS -o /dev/null -w "%{http_code}" "$URL" -H "apikey: $KEY")
+          echo "Supabase a répondu : HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::Le ping a échoué (HTTP $code). Le projet est peut-être déjà en pause : ouvrez le tableau de bord Supabase pour le réactiver."
+            exit 1
+          fi
+          echo "OK : la base est active, le compteur d'inactivité est réarmé."
