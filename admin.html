@@ -45,6 +45,7 @@
       <div class="tabs">
         <button class="tab-btn active" data-tab="produits" onclick="showTab('produits',this)">📦 Produits</button>
         <button class="tab-btn" data-tab="services" onclick="showTab('services',this)">💱 Services</button>
+        <button class="tab-btn" data-tab="horaires" onclick="showTab('horaires',this)">🕒 Horaires</button>
         <button class="tab-btn" data-tab="apparence" onclick="showTab('apparence',this)">🎨 Logos &amp; photos</button>
       </div>
 
@@ -55,6 +56,24 @@
         <div id="servicesAdmin"><div class="loading">Chargement…</div></div>
       </div>
       </div><!-- /tab-services -->
+
+      <div class="tab-pane hidden" id="tab-horaires">
+        <div class="svc-admin">
+          <h3>🕒 Horaires du magasin</h3>
+          <p class="svc-admin-sub">Ces horaires pilotent le badge « Ouvert / Fermé » et la liste des horaires affichée sur le site.</p>
+          <div class="hours-editor">
+            <div class="hours-row"><span class="hours-lbl">Lundi – Samedi</span><input type="time" id="whOpen"><span class="hours-sep">→</span><input type="time" id="whClose"></div>
+            <div class="hours-row"><label class="hours-closed"><input type="checkbox" id="sunClosed" onchange="document.getElementById('sunRow').style.opacity=this.checked?.4:1"> Fermé le dimanche</label></div>
+            <div class="hours-row" id="sunRow"><span class="hours-lbl">Dimanche</span><input type="time" id="suOpen"><span class="hours-sep">→</span><input type="time" id="suClose"></div>
+            <button class="btn" onclick="saveStoreHours()">Enregistrer les horaires du magasin</button>
+          </div>
+        </div>
+        <div class="svc-admin" style="margin-top:20px">
+          <h3>💱 Horaires des services (MoneyGram, RIA)</h3>
+          <p class="svc-admin-sub">Texte affiché sous chaque service sur le site. Exemple : « Lun–Sam : 10h–18h · Dimanche fermé ».</p>
+          <div id="svcHoursAdmin"><div class="loading">Chargement…</div></div>
+        </div>
+      </div><!-- /tab-horaires -->
 
       <div class="tab-pane hidden" id="tab-apparence">
       <div class="svc-admin about-admin">
@@ -181,6 +200,7 @@
     loadProducts();
     loadServicesAdmin();
     loadSiteImages();
+    loadHours();
   }
 
   /* ---------- Photos & logos (réglages du site) ---------- */
@@ -289,7 +309,7 @@
     const box = document.getElementById('servicesAdmin');
     const { data, error } = await sb.from('services').select('*').order('sort_order',{ascending:true});
     if(error){ box.innerHTML='<div class="loading">⚠️ Lance d\'abord <b>services.sql</b> dans Supabase.</div>'; console.warn(error); return; }
-    svcList = data||[]; renderServicesAdmin();
+    svcList = data||[]; renderServicesAdmin(); renderSvcHours();
   }
   function renderServicesAdmin(){
     document.getElementById('servicesAdmin').innerHTML = svcList.map(s=>`
@@ -303,6 +323,51 @@
     const nv = !s.available; s.available = nv; renderServicesAdmin();
     const { error } = await sb.from('services').update({ available:nv }).eq('id', id);
     if(error){ alert('Erreur : '+error.message); s.available=!nv; renderServicesAdmin(); } else { toast(); }
+  }
+
+  /* ---------- HORAIRES (magasin + services) ---------- */
+  let storeHours = { weekday:{open:"10:00",close:"19:30"}, sunday:{open:"10:00",close:"14:00",closed:false} };
+  const t5 = s => (s||'').slice(0,5);
+  async function loadHours(){
+    try {
+      const { data } = await sb.from('settings').select('value').eq('key','store_hours').maybeSingle();
+      if(data && data.value){ try { storeHours = JSON.parse(data.value); } catch(e){} }
+    } catch(e){ console.warn('store_hours:', e); }
+    renderStoreHours();
+  }
+  function renderStoreHours(){
+    const w = storeHours.weekday||{}, s = storeHours.sunday||{};
+    const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = v||''; };
+    set('whOpen', t5(w.open)); set('whClose', t5(w.close));
+    set('suOpen', t5(s.open)); set('suClose', t5(s.close));
+    const cb = document.getElementById('sunClosed'); if(cb) cb.checked = !!s.closed;
+    const row = document.getElementById('sunRow'); if(row) row.style.opacity = s.closed ? .4 : 1;
+  }
+  async function saveStoreHours(){
+    const val = {
+      weekday:{ open:document.getElementById('whOpen').value||'10:00', close:document.getElementById('whClose').value||'19:30' },
+      sunday:{ open:document.getElementById('suOpen').value||'10:00', close:document.getElementById('suClose').value||'14:00', closed:document.getElementById('sunClosed').checked }
+    };
+    storeHours = val;
+    const { error } = await sb.from('settings').upsert({ key:'store_hours', value: JSON.stringify(val) });
+    if(error){ alert('Erreur : '+error.message); } else { toast(); }
+  }
+  function renderSvcHours(){
+    const box = document.getElementById('svcHoursAdmin'); if(!box) return;
+    if(!svcList.length){ box.innerHTML = '<div class="loading">Aucun service pour le moment.</div>'; return; }
+    box.innerHTML = svcList.map(s=>`
+      <div class="hours-svc-row">
+        <b>${s.name}</b>
+        <input type="text" data-svc="${s.id}" value="${esc(s.hours||'')}" placeholder="Lun–Sam : 10h–18h · Dimanche fermé">
+        <button class="btn ghost" onclick="saveSvcHours('${s.id}')">Enregistrer</button>
+      </div>`).join('');
+  }
+  async function saveSvcHours(id){
+    const inp = document.querySelector('input[data-svc="'+id+'"]'); if(!inp) return;
+    const hours = inp.value.trim();
+    const s = svcList.find(x=>x.id===id); if(s) s.hours = hours;
+    const { error } = await sb.from('services').update({ hours }).eq('id', id);
+    if(error){ alert('Erreur : '+error.message); } else { toast(); }
   }
 
   function renderStats(){
