@@ -1,4 +1,4 @@
-/* ===================== Gamme Market — styles partagés ===================== */
+/* ===================== Gamme Market · styles partagés ===================== */
 :root{
   --bg:#FBF4E9; --ink:#2A1E16; --muted:#6B5A4A;
   --terra:#C0552B; --terra-dk:#9A3F1E;
@@ -478,3 +478,22 @@ footer a:hover{color:var(--gold)}
 .hours-svc-row b{min-width:100px}
 .hours-svc-row input[type=text]{flex:1;min-width:220px;border:1px solid #d9d2c4;border-radius:9px;padding:8px 11px;font-family:inherit;font-size:.9rem}
 .hours-svc-row input[type=text]:focus{outline:none;border-color:#1B5E20}
+
+/* ===== Back-office : réservations ===== */
+.res-count{font-size:.85rem;color:#888;margin-bottom:12px;font-weight:600}
+.res-row{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;padding:13px 0;border-bottom:1px solid #f0e9da}
+.res-main{min-width:210px;flex:1}
+.res-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.res-top b{font-size:1rem}
+.res-date{font-size:.77rem;color:#a09a8e}
+.res-prod{font-size:.9rem;color:#3a352d;margin-top:3px}
+.res-tel{font-size:.9rem;color:#1B5E20;font-weight:700;margin-top:3px}
+.res-actions{display:flex;gap:8px;flex-wrap:wrap}
+.res-btn{padding:7px 13px;font-size:.82rem}
+.res-del{background:#1B5E20;border-color:#1B5E20;color:#fff}
+.res-del:hover{background:#14481a}
+
+/* ===== Logo texte des pages légales (sans dépendance image) ===== */
+.legal-logo{font-family:'Fraunces',serif;font-weight:900;font-size:1.4rem;letter-spacing:.02em;text-decoration:none;line-height:1;display:inline-block}
+.legal-logo .lg1{color:#1a3c2a}
+.legal-logo .lg2{color:#5a9440}
