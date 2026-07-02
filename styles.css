@@ -497,3 +497,9 @@ footer a:hover{color:var(--gold)}
 .legal-logo{font-family:'Fraunces',serif;font-weight:900;font-size:1.4rem;letter-spacing:.02em;text-decoration:none;line-height:1;display:inline-block}
 .legal-logo .lg1{color:#1a3c2a}
 .legal-logo .lg2{color:#5a9440}
+
+/* ===== Back-office : logos (connexion + en-tête) ===== */
+.login-logo{margin-bottom:12px}
+.login-logo-img{height:46px;width:auto;display:block}
+.bo-brand{display:flex;align-items:center;gap:14px}
+.bo-logo{height:40px;width:auto;display:block;flex:0 0 auto}
