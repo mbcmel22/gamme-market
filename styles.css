@@ -499,7 +499,7 @@ footer a:hover{color:var(--gold)}
 .legal-logo .lg2{color:#5a9440}
 
 /* ===== Back-office : logos (connexion + en-tête) ===== */
-.login-logo{margin-bottom:12px}
-.login-logo-img{height:46px;width:auto;display:block}
+.login-logo{margin-bottom:12px;text-align:center}
+.login-logo-img{height:46px;width:auto;display:block;margin:0 auto}
 .bo-brand{display:flex;align-items:center;gap:14px}
 .bo-logo{height:40px;width:auto;display:block;flex:0 0 auto}
