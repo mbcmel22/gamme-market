@@ -18,7 +18,7 @@
   <!-- ÉCRAN DE CONNEXION -->
   <div class="login-wrap" id="loginScreen">
     <div class="login-card">
-      <div class="login-logo"><img src="logo-paysage.webp" alt="Gamme Market" class="login-logo-img"></div>
+      <div class="login-logo"><img id="loginLogoImg" src="logo-paysage.webp" alt="Gamme Market" class="login-logo-img" onerror="this.style.display='none'"></div>
       <h2>Espace gérant</h2>
       <p class="sub">Connectez-vous pour gérer votre stock.</p>
       <div class="login-err" id="loginErr"></div>
@@ -32,7 +32,7 @@
   <div id="panel" style="display:none">
     <div class="bo-top">
       <div class="wrap">
-        <div class="bo-brand"><img src="logo-carre.webp" alt="Gamme Market" class="bo-logo"><div><h2>Gestion du magasin</h2><span class="who" id="who"></span></div></div>
+        <div class="bo-brand"><img id="boLogoImg" src="logo-carre.webp" alt="Gamme Market" class="bo-logo" onerror="this.style.display='none'"><div><h2>Gestion du magasin</h2><span class="who" id="who"></span></div></div>
         <div style="display:flex;gap:10px">
           <a class="btn ghost" href="/" target="_blank">👁️ Voir le site</a>
           <button class="btn ghost" onclick="doLogout()">Déconnexion</button>
@@ -700,6 +700,23 @@
   window.addEventListener('scroll', ()=>{ boTop.classList.toggle('show', window.scrollY > 320); });
 
   checkSession();
+
+  // Logos de marque chargés depuis Supabase (mêmes que le site public, modifiables au back-office)
+  (async function brandLogos(){
+    try{
+      const { data } = await sb.from('settings').select('key,value').in('key', ['logo_carre','logo_paysage']);
+      const m = {}; (data||[]).forEach(r => m[r.key] = r.value);
+      const setLogo = (id, url) => {
+        if(!url) return;
+        const el = document.getElementById(id); if(!el) return;
+        const pre = new Image();
+        pre.onload = () => { el.src = url; el.style.display = ''; };
+        pre.src = url;
+      };
+      setLogo('loginLogoImg', m.logo_paysage);
+      setLogo('boLogoImg', m.logo_carre);
+    }catch(e){ console.warn('brand logos:', e); }
+  })();
 </script>
 <button class="bo-totop" id="boTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Remonter en haut de la page">↑</button>
 </body>
