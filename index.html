@@ -78,8 +78,8 @@
   <header class="nav">
     <div class="wrap">
       <a href="#" class="logo" aria-label="Gamme Market">
-        <img src="logo-carre.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-square" fetchpriority="high">
-        <img src="logo-paysage.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-landscape" fetchpriority="high">
+        <img src="logo-carre.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-square" fetchpriority="high" onerror="this.style.display='none'">
+        <img src="logo-paysage.webp" alt="Gamme Market · épicerie africaine et exotique à Cholet" class="logo-landscape" fetchpriority="high" onerror="this.style.display='none'">
       </a>
       <nav class="navlinks">
         <a href="#produits">Alimentaire</a>
@@ -265,7 +265,7 @@
     <div class="wrap">
       <div class="foot-grid">
         <div>
-          <a href="#" class="logo footer-logo" style="margin-bottom:14px" aria-label="Gamme Market"><img src="logo-paysage.webp" alt="Gamme Market"></a>
+          <a href="#" class="logo footer-logo" style="margin-bottom:14px" aria-label="Gamme Market"><img src="logo-paysage.webp" alt="Gamme Market" onerror="this.style.display='none'"></a>
           <p>Votre épicerie africaine et exotique à Cholet, près de la place Travot. Produits authentiques, services de proximité et accueil chaleureux.</p>
         </div>
         <div>
@@ -458,8 +458,8 @@
       const swapLogo = (sel, url) => {
         if(!url) return;
         const pre = new Image();
-        pre.onload = () => document.querySelectorAll(sel).forEach(i => { i.src = url; });
-        pre.src = url;   // on n'échange que lorsque la nouvelle image est chargée
+        pre.onload = () => document.querySelectorAll(sel).forEach(i => { i.src = url; i.style.display = ''; });
+        pre.src = url;   // on n'échange (et on réaffiche) que lorsque la nouvelle image est chargée
       };
       swapLogo('.logo-square', map.logo_carre);
       swapLogo('.logo-landscape, .footer-logo img', map.logo_paysage);
