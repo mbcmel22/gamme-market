@@ -14,7 +14,7 @@
 <meta name="geo.placename" content="Cholet">
 <meta name="geo.position" content="47.0586;-0.8793">
 <meta name="ICBM" content="47.0586, -0.8793">
-<link rel="canonical" href="https://www.gammemarket-cholet.fr/">
+<link rel="canonical" href="https://gamme-market.vercel.app/">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="icon" type="image/webp" href="logo-carre.webp">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -22,18 +22,23 @@
 <meta property="og:site_name" content="Gamme Market">
 <meta property="og:title" content="Gamme Market · Épicerie africaine et exotique à Cholet">
 <meta property="og:description" content="Produits africains et exotiques, frais, surgelés, épicerie, boissons, cosmétiques et transferts d'argent MoneyGram et RIA à Cholet, près de la place Travot.">
-<meta property="og:url" content="https://www.gammemarket-cholet.fr/">
-<meta property="og:image" content="https://www.gammemarket-cholet.fr/logo-paysage.webp">
+<meta property="og:url" content="https://gamme-market.vercel.app/">
+<meta property="og:image" content="https://gamme-market.vercel.app/og-image.png">
+<meta property="og:image:secure_url" content="https://gamme-market.vercel.app/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Gamme Market · épicerie africaine et exotique à Cholet">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Gamme Market · Épicerie africaine et exotique à Cholet">
 <meta name="twitter:description" content="Épicerie africaine et exotique à Cholet, près de la place Travot. MoneyGram &amp; RIA, produits frais, surgelés et cosmétiques.">
-<meta name="twitter:image" content="https://www.gammemarket-cholet.fr/logo-paysage.webp">
+<meta name="twitter:image" content="https://gamme-market.vercel.app/og-image.png">
 <script type="application/ld+json">
 {
   "@context":"https://schema.org","@type":"GroceryStore","name":"Gamme Market",
-  "image":"https://www.gammemarket-cholet.fr/logo-paysage.webp",
-  "url":"https://www.gammemarket-cholet.fr/",
+  "image":"https://gamme-market.vercel.app/og-image.png",
+  "url":"https://gamme-market.vercel.app/",
   "description":"Épicerie africaine et exotique à Cholet, près de la place Travot : alimentation africaine, fruits et légumes, surgelés, épicerie, boissons, cosmétiques au karité et transferts d'argent MoneyGram et RIA.",
   "address":{"@type":"PostalAddress","streetAddress":"53 Rue Nationale","addressLocality":"Cholet","postalCode":"49300","addressRegion":"Maine-et-Loire","addressCountry":"FR"},
   "geo":{"@type":"GeoCoordinates","latitude":47.0586,"longitude":-0.8793},
@@ -112,9 +117,9 @@
       <div class="card">
         <h3>Informations</h3>
         <div class="infoline"><div><a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener"><b>53 Rue Nationale</b><span>49300 Cholet · Itinéraire ↗</span></a></div></div>
-        <div class="infoline"><div><b>Lun–Sam : 10h–19h30</b><span>Dimanche : 10h–14h</span></div></div>
+        <div class="infoline"><div id="heroHours"><b>Lun–Sam : 10h–19h30</b><span>Dimanche : 10h–14h</span></div></div>
         <div class="infoline"><div><a href="tel:+33784576065"><b>07 84 57 60 65</b></a><span>Appelez-nous</span></div></div>
-        <div class="infoline"><div id="heroTransfer"><b>MoneyGram &amp; RIA disponibles</b><span>Transfert d'argent · Lun–Sam : 10h–19h</span></div></div>
+        <div class="infoline"><div id="heroTransfer"><b>MoneyGram &amp; RIA disponibles</b><span>Transfert d'argent · Lun–Sam : 10h–18h · Dimanche fermé</span></div></div>
       </div>
     </div>
   </section>
@@ -217,7 +222,7 @@
       <div class="practical">
         <div class="pcard">
           <h3>Horaires d'ouverture</h3>
-          <ul class="hours">
+          <ul class="hours" id="hoursList">
             <li><span>Lundi</span><span>10h00 – 19h30</span></li>
             <li><span>Mardi</span><span>10h00 – 19h30</span></li>
             <li><span>Mercredi</span><span>10h00 – 19h30</span></li>
@@ -283,7 +288,7 @@
       </p>
       <div class="copyright">
         <span>© 2026 Gamme Market · Tous droits réservés</span>
-        <span>Mentions légales · Politique de confidentialité</span>
+        <span><a href="mentions-legales.html">Mentions légales</a> · <a href="politique-confidentialite.html">Politique de confidentialité</a></span>
       </div>
     </div>
   </footer>
@@ -453,6 +458,7 @@
       if(map.logo_paysage){ document.querySelectorAll('.logo-landscape, .footer-logo img').forEach(i=> i.src = map.logo_paysage); }
       if(map.logo_moneygram){ TRANSFER_LOGOS.moneygram = map.logo_moneygram; }
       if(map.logo_ria){ TRANSFER_LOGOS.ria = map.logo_ria; }
+      if(map.store_hours){ try { STORE_HOURS = JSON.parse(map.store_hours); applyStoreHours(); } catch(e){ console.warn('store_hours:', e); } }
     } catch(e){ console.warn('settings:', e); }
   }
 
@@ -463,8 +469,8 @@
     ria:"Transfert d'argent international rapide et sécurisé avec RIA, directement à votre épicerie."
   };
   let servicesData = [
-    {id:'moneygram', name:'MoneyGram', available:true, hours:'Lun–Sam : 10h–19h · Dimanche fermé'},
-    {id:'ria', name:'RIA', available:true, hours:'Lun–Sam : 10h–19h · Dimanche fermé'}
+    {id:'moneygram', name:'MoneyGram', available:true, hours:'Lun–Sam : 10h–18h · Dimanche fermé'},
+    {id:'ria', name:'RIA', available:true, hours:'Lun–Sam : 10h–18h · Dimanche fermé'}
   ];
 
   async function loadServices(){
@@ -498,38 +504,67 @@
     const el = document.getElementById('heroTransfer'); if(!el) return;
     const avail = servicesData.filter(s=>s.available).map(s=>s.name);
     if(avail.length){
-      el.innerHTML = `<b>${avail.join(' & ')} disponible${avail.length>1?'s':''}</b><span>Transfert d'argent · Lun–Sam : 10h–19h</span>`;
+      const sh = (servicesData.find(s=>s.available)||{}).hours || 'Lun–Sam : 10h–18h · Dimanche fermé';
+      el.innerHTML = `<b>${avail.join(' & ')} disponible${avail.length>1?'s':''}</b><span>Transfert d'argent · ${sh}</span>`;
     } else {
       el.innerHTML = `<b>Transferts momentanément indisponibles</b><span>MoneyGram / RIA</span>`;
     }
   }
 
-  // ===== Statut d'ouverture dynamique =====
-  // Lun–Sam 9h–20h, Dimanche 9h–13h. getDay() : 0 = dimanche.
-  const HOURS = {0:[9,13],1:[9,20],2:[9,20],3:[9,20],4:[9,20],5:[9,20],6:[9,20]};
+  // ===== Horaires du magasin (modifiables depuis le back-office) =====
+  // getDay() : 0 = dimanche. Valeurs par défaut = horaires réels actuels.
+  let STORE_HOURS = {
+    weekday:{ open:"10:00", close:"19:30" },
+    sunday: { open:"10:00", close:"14:00", closed:false }
+  };
+  const DAY_NAMES = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  const hm = str => { const [h,m] = (str||'0:0').split(':').map(Number); return h*60 + (m||0); };
+  const fmtH  = str => { const [h,m] = (str||'').split(':'); return (m && m!=='00') ? `${+h}h${m}` : `${+h}h`; };
+  const fmtHM = str => { const [h,m] = (str||'').split(':'); return `${+h}h${m||'00'}`; };
+  function dayCfg(day){ if(day===0){ return STORE_HOURS.sunday.closed ? null : STORE_HOURS.sunday; } return STORE_HOURS.weekday; }
+  function nextOpen(day){
+    for(let i=1;i<=7;i++){ const d=(day+i)%7; const c=dayCfg(d); if(c) return { when: i===1?'demain':DAY_NAMES[d], open:c.open }; }
+    return null;
+  }
   function fmtDur(m){ if(m<60) return m+' min'; const h=Math.floor(m/60), mm=m%60; return mm? `${h} h ${mm}` : `${h} h`; }
   function updateOpenPill(){
     const el = document.getElementById('openPill'); if(!el) return;
-    const now = new Date();
-    const [oh, ch] = HOURS[now.getDay()];
+    const now = new Date(); const day = now.getDay(); const cfg = dayCfg(day);
     const mins = now.getHours()*60 + now.getMinutes();
-    const open = oh*60, close = ch*60;
     let cls = 'openpill', txt = '';
-    if(mins < open){
-      const diff = open - mins;
-      if(diff <= 60){ cls += ' soon'; txt = `Ouvre dans ${fmtDur(diff)}`; }
-      else { cls += ' closed'; txt = `Fermé · ouvre à ${oh}h`; }
-    } else if(mins < close){
-      const diff = close - mins;
-      if(diff <= 60){ cls += ' soon'; txt = `Ferme dans ${fmtDur(diff)}`; }
-      else { txt = `Ouvert · ferme à ${ch}h`; }
-    } else {
-      cls += ' closed'; txt = 'Fermé · ouvre demain à 9h';
+    const closedTxt = () => { const n = nextOpen(day); cls += ' closed'; return n ? `Fermé · ouvre ${n.when} à ${fmtH(n.open)}` : 'Fermé'; };
+    if(!cfg){ txt = closedTxt(); }
+    else {
+      const open = hm(cfg.open), close = hm(cfg.close);
+      if(mins < open){
+        const diff = open - mins;
+        if(diff <= 60){ cls += ' soon'; txt = `Ouvre dans ${fmtDur(diff)}`; }
+        else { cls += ' closed'; txt = `Fermé · ouvre à ${fmtH(cfg.open)}`; }
+      } else if(mins < close){
+        const diff = close - mins;
+        if(diff <= 60){ cls += ' soon'; txt = `Ferme dans ${fmtDur(diff)}`; }
+        else { txt = `Ouvert · ferme à ${fmtH(cfg.close)}`; }
+      } else { txt = closedTxt(); }
     }
-    el.className = cls;
-    el.textContent = txt;
+    el.className = cls; el.textContent = txt;
   }
-  updateOpenPill();
+  function applyStoreHours(){
+    const w = STORE_HOURS.weekday, s = STORE_HOURS.sunday;
+    const heroW = `${fmtH(w.open)}–${fmtH(w.close)}`;
+    const heroS = s.closed ? 'Fermé' : `${fmtH(s.open)}–${fmtH(s.close)}`;
+    const hero = document.getElementById('heroHours');
+    if(hero) hero.innerHTML = `<b>Lun–Sam : ${heroW}</b><span>Dimanche : ${heroS}</span>`;
+    const list = document.getElementById('hoursList');
+    if(list){
+      const wtxt = `${fmtHM(w.open)} – ${fmtHM(w.close)}`;
+      const stxt = s.closed ? 'Fermé' : `${fmtHM(s.open)} – ${fmtHM(s.close)}`;
+      const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+      list.innerHTML = jours.map(j=>`<li><span>${j}</span><span>${wtxt}</span></li>`).join('')
+        + `<li><span>Dimanche</span><span>${stxt}</span></li>`;
+    }
+    updateOpenPill();
+  }
+  applyStoreHours();
   setInterval(updateOpenPill, 60000);
 
   // Recherche de produits
@@ -582,6 +617,7 @@
         <small>Au cas où le produit ne serait plus disponible, le magasin vous prévient.</small>
       </div>
       <div class="modal-err" id="resErr"></div>
+      <label class="modal-consent"><input type="checkbox" id="resConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter en cas de retard ou d'imprévu concernant ma mise de côté. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="politique-confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
       <p class="modal-wa-note">📲 En validant, <b>WhatsApp s'ouvre</b> avec votre message déjà rédigé. Appuyez bien sur <b>« Envoyer »</b> pour que votre réservation soit prise en compte par le magasin.</p>
       <button class="btn modal-submit" onclick="sendReserve()">Réserver via WhatsApp</button>
       ${epuise?'<p class="modal-note">Ce produit est actuellement épuisé : votre demande sera traitée dès réapprovisionnement.</p>':''}`;
@@ -606,6 +642,8 @@
     if(!name){ err.textContent='Indiquez votre nom.'; err.classList.add('show'); return; }
     if(qty<=0){ err.textContent='Indiquez une quantité valide.'; err.classList.add('show'); return; }
     if(phone.replace(/\D/g,'').length<8){ err.textContent='Indiquez un numéro de téléphone valide.'; err.classList.add('show'); return; }
+    const consent = document.getElementById('resConsent');
+    if(!consent || !consent.checked){ err.textContent='Merci de cocher la case de consentement pour continuer.'; err.classList.add('show'); return; }
 
     const btn = document.querySelector('.modal-submit');
     if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
