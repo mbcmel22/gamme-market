@@ -514,3 +514,28 @@ footer a:hover{color:var(--gold)}
 .link-btn:hover{color:var(--terra-dk)}
 .login-msg{display:none;margin-top:14px;font-size:.85rem;color:#1B5E20;background:#E8F7EE;border:1px solid #BFE6CD;border-radius:10px;padding:9px 12px;line-height:1.45}
 .login-msg.show{display:block}
+
+/* ===== Panier de réservation (site public) ===== */
+.cart-fab{position:fixed;right:20px;bottom:84px;z-index:130;width:56px;height:56px;border-radius:50%;background:var(--terra);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px -8px var(--terra-dk);transition:transform .15s}
+.cart-fab:hover{transform:scale(1.06)}
+.cart-fab-count{position:absolute;top:-4px;right:-4px;background:var(--gold);color:#3a2c12;font-size:.72rem;font-weight:800;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg)}
+.cart-modal{max-width:450px}
+.cart-empty{text-align:center;color:var(--muted);padding:24px 0;line-height:1.6}
+.cart-item{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:11px 0;border-bottom:1px solid var(--line)}
+.cart-item-main{flex:1 1 140px;min-width:0}
+.cart-item-main b{display:block;font-size:.92rem;line-height:1.2}
+.cart-item-meta{font-size:.75rem;color:var(--muted)}
+.cart-qty{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:100px;padding:3px 6px}
+.cart-qty button{width:24px;height:24px;border:none;background:var(--sand);border-radius:50%;cursor:pointer;font-size:1rem;line-height:1;color:var(--terra-dk)}
+.cart-qty span{font-size:.8rem;font-weight:700;min-width:56px;text-align:center;white-space:nowrap}
+.cart-line{font-weight:700;font-size:.85rem;white-space:nowrap;min-width:52px;text-align:right}
+.cart-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:2px 4px}
+.cart-del:hover{color:#b3261e}
+.cart-total{display:flex;justify-content:space-between;align-items:baseline;font-family:'Fraunces',serif;font-weight:900;font-size:1.15rem;margin-top:12px;padding-top:12px;border-top:2px solid var(--ink)}
+.cart-note{font-size:.78rem;color:var(--muted);line-height:1.45;margin:8px 0 16px}
+.cart-confirm-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+
+/* Réservations back-office : détail groupé */
+.res-pickup{font-size:.82rem;color:var(--terra,#B4552D);font-weight:700;margin-top:3px}
+.res-items{margin:5px 0 4px;padding-left:18px}
+.res-items li{font-size:.88rem;color:#3a352d;margin-bottom:2px}
