@@ -309,6 +309,21 @@
   </div>
 </div>
 
+<!-- Modale panier de réservation -->
+<div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
+  <div class="modal cart-modal">
+    <button class="modal-close" onclick="closeCart()" aria-label="Fermer">✕</button>
+    <h3 class="modal-title">Ma réservation</h3>
+    <div id="cartBody"></div>
+  </div>
+</div>
+
+<!-- Bouton panier flottant -->
+<button class="cart-fab" id="cartBtn" onclick="openCart()" style="display:none" aria-label="Voir ma réservation">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  <span class="cart-fab-count" id="cartCount">0</span>
+</button>
+
 <button class="totop" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Revenir en haut">↑</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -353,7 +368,7 @@
 
   function productCard(p){
     const s = statusOf(p.qty);
-    const qtyTxt = p.qty>0 ? `<span class="unit" style="font-size:.75rem">· ${p.qty} en rayon</span>` : "";
+    const qtyTxt = "";   // le nombre en rayon est masqué sur le site (l'étiquette de disponibilité reste)
     const visual = p.image_url ? `<img src="${p.image_url}" alt="${p.name} · Gamme Market épicerie africaine Cholet" class="thumb-img" loading="lazy">` : `<span class="thumb-emoji">${p.emoji||'🛒'}</span>`;
     const priceTxt = (p.price && p.price>0) ? eur(p.price) : 'Prix en magasin';
     return `<article class="prod" onclick="openReserve(${p.id})">
@@ -594,6 +609,24 @@
   const RESERVATION_WEBHOOK = ""; // URL du webhook Make pour l'envoi AUTOMATIQUE (laisser vide tant que non configuré)
   let reserveProduct = null;
 
+  // ===== Panier de réservation =====
+  let cart = [];
+  try { cart = JSON.parse(localStorage.getItem('gm_cart')||'[]') || []; } catch(e){ cart = []; }
+  function saveCart(){ try { localStorage.setItem('gm_cart', JSON.stringify(cart)); } catch(e){} }
+  const unitPerKg = u => /\bkg\b|kilo/i.test(u||'');
+  function estimateLine(it){
+    if(!(it.price>0)) return null;                         // "Prix en magasin" : non estimable
+    if(unitPerKg(it.unit) && it.resUnit==='grammes') return it.price*it.qty/1000;
+    return it.price*it.qty;                                // estimation indicative
+  }
+  function cartTotal(){ let sum=0, unknown=false; cart.forEach(it=>{ const l=estimateLine(it); if(l==null) unknown=true; else sum+=l; }); return {sum, unknown}; }
+  function updateCartButton(){
+    const btn=document.getElementById('cartBtn'); if(!btn) return;
+    btn.style.display = cart.length ? 'flex' : 'none';
+    const c=document.getElementById('cartCount'); if(c) c.textContent=cart.length;
+  }
+  updateCartButton();
+
   function openReserve(id){
     const p = allProducts.find(x=>x.id===id); if(!p) return;
     reserveProduct = p;
@@ -602,35 +635,47 @@
     const photoBlock = p.image_url
       ? `<div class="modal-photo" onclick="zoomPhoto('${p.image_url}')"><img src="${p.image_url}" alt="${p.name} · Gamme Market Cholet"><span class="zoom-hint">🔍 Agrandir</span></div>`
       : `<div class="modal-photo is-emoji" style="background:${p.color||'#EFE2CC'}">${p.emoji||'🛒'}</div>`;
+    const perKg = unitPerKg(p.unit);
+    const unitOpts = perKg
+      ? `<option value="kg">kg</option><option value="grammes">grammes</option><option value="unité(s)">unité(s)</option>`
+      : `<option value="unité(s)">unité(s)</option><option value="kg">kg</option><option value="grammes">grammes</option>`;
     document.getElementById('reserveBody').innerHTML = `
       ${photoBlock}
       <h3 class="modal-title">${p.name}</h3>
       <div class="modal-sub"><span class="unit">${p.unit||''} · ${(p.price&&p.price>0)?eur(p.price):'Prix en magasin'}</span> <span class="badge ${s.badge}">${s.label}</span></div>
-      <p class="modal-intro">Réservez ce produit : il sera <b>mis de côté pendant 1h</b>. Votre demande part directement au magasin par WhatsApp.</p>
-      <div class="modal-field"><label>Votre nom</label>
-        <input type="text" id="resName" placeholder="Ex : Awa Diallo">
-      </div>
+      <p class="modal-intro">Ajoutez ce produit à votre réservation. Vous pourrez en ajouter d'autres avant de valider. Tout est mis de côté <b>pendant 1h</b>.</p>
       <div class="modal-field"><label>Quantité souhaitée</label>
         <div class="qty-row">
           <input type="number" id="resQty" min="1" value="1">
-          <select id="resUnit">
-            <option value="unité(s)">unité(s)</option>
-            <option value="grammes">grammes</option>
-            <option value="kg">kg</option>
-          </select>
+          <select id="resUnit">${unitOpts}</select>
         </div>
       </div>
-      <div class="modal-field"><label>Votre numéro de téléphone</label>
-        <input type="tel" id="resPhone" placeholder="XX XX XX XX XX">
-        <small>Au cas où le produit ne serait plus disponible, le magasin vous prévient.</small>
-      </div>
       <div class="modal-err" id="resErr"></div>
-      <label class="modal-consent"><input type="checkbox" id="resConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter en cas de retard ou d'imprévu concernant ma mise de côté. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="/politique-confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
-      <p class="modal-wa-note">📲 En validant, <b>WhatsApp s'ouvre</b> avec votre message déjà rédigé. Appuyez bien sur <b>« Envoyer »</b> pour que votre réservation soit prise en compte par le magasin.</p>
-      <button class="btn modal-submit" onclick="sendReserve()">Réserver via WhatsApp</button>
-      ${epuise?'<p class="modal-note">Ce produit est actuellement épuisé : votre demande sera traitée dès réapprovisionnement.</p>':''}`;
+      <button class="btn modal-submit" onclick="addToCart()">Ajouter à ma réservation</button>
+      ${epuise?'<p class="modal-note">Ce produit est actuellement épuisé : votre demande sera notée pour le réapprovisionnement.</p>':''}`;
     document.getElementById('reserveModal').classList.add('open');
     document.body.style.overflow='hidden';
+  }
+  function addToCart(){
+    const p = reserveProduct; if(!p) return;
+    const qty = parseInt(document.getElementById('resQty').value)||0;
+    const resUnit = document.getElementById('resUnit').value;
+    const err = document.getElementById('resErr');
+    if(qty<=0){ err.textContent='Indiquez une quantité valide.'; err.classList.add('show'); return; }
+    const ex = cart.find(it=>it.id===p.id && it.resUnit===resUnit);
+    if(ex) ex.qty += qty;
+    else cart.push({ id:p.id, name:p.name, unit:p.unit, price:p.price, emoji:p.emoji, color:p.color, image_url:p.image_url, qty, resUnit });
+    saveCart(); updateCartButton();
+    document.getElementById('reserveBody').innerHTML = `
+      <div class="modal-success">
+        <div class="ok">✓</div>
+        <h3>Ajouté à votre réservation</h3>
+        <p><b>${p.name}</b> — ${qty} ${resUnit}</p>
+        <div class="cart-confirm-actions">
+          <button class="btn ghost" onclick="closeReserve()">Continuer mes achats</button>
+          <button class="btn" onclick="closeReserve();openCart()">Voir ma réservation (${cart.length})</button>
+        </div>
+      </div>`;
   }
   function closeReserve(){
     document.getElementById('reserveModal').classList.remove('open');
@@ -641,62 +686,95 @@
     document.getElementById('photoZoom').classList.add('open');
   }
   function closeZoom(){ document.getElementById('photoZoom').classList.remove('open'); }
-  async function sendReserve(){
-    const name = document.getElementById('resName').value.trim();
-    const qty = parseInt(document.getElementById('resQty').value)||0;
-    const unit = document.getElementById('resUnit').value;
-    const phone = document.getElementById('resPhone').value.trim();
-    const err = document.getElementById('resErr');
+  function openCart(){ renderCart(); document.getElementById('cartModal').classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeCart(){ document.getElementById('cartModal').classList.remove('open'); document.body.style.overflow=''; }
+  function changeQty(i,d){ if(!cart[i]) return; cart[i].qty+=d; if(cart[i].qty<=0) cart.splice(i,1); saveCart(); updateCartButton(); renderCart(); }
+  function removeItem(i){ cart.splice(i,1); saveCart(); updateCartButton(); renderCart(); }
+  const pad2 = n => String(n).padStart(2,'0');
+  function pickupSlots(){
+    const now=new Date(), day=now.getDay(), cfg=dayCfg(day);
+    const slots=['Dès que possible'];
+    if(cfg){
+      const nowMin=now.getHours()*60+now.getMinutes();
+      const start=Math.max(Math.ceil((nowMin+20)/30)*30, hm(cfg.open)), close=hm(cfg.close);
+      let count=0;
+      for(let t=start; t<=close && count<8; t+=30, count++){ slots.push(`Aujourd'hui à ${pad2(Math.floor(t/60))}h${pad2(t%60)}`); }
+    }
+    if(slots.length<3){ const n=nextOpen(day); if(n){ const w=n.when==='demain'?'Demain':(n.when.charAt(0).toUpperCase()+n.when.slice(1)); slots.push(`${w} dès ${fmtH(n.open)}`); } }
+    return slots;
+  }
+  function renderCart(){
+    const body=document.getElementById('cartBody'); if(!body) return;
+    if(!cart.length){ body.innerHTML='<p class="cart-empty">Votre réservation est vide.<br>Ajoutez des produits depuis le catalogue.</p>'; return; }
+    const items=cart.map((it,i)=>{
+      const l=estimateLine(it);
+      return `<div class="cart-item">
+        <div class="cart-item-main"><b>${it.name}</b><span class="cart-item-meta">${it.price>0?eur(it.price)+' / '+(it.unit||'u'):'Prix en magasin'}</span></div>
+        <div class="cart-qty"><button type="button" onclick="changeQty(${i},-1)" aria-label="Moins">–</button><span>${it.qty} ${it.resUnit}</span><button type="button" onclick="changeQty(${i},1)" aria-label="Plus">+</button></div>
+        <div class="cart-line">${l==null?'<span class="price-ask">prix magasin</span>':'~ '+eur(l)}</div>
+        <button class="cart-del" type="button" onclick="removeItem(${i})" aria-label="Retirer">✕</button>
+      </div>`;
+    }).join('');
+    const {sum,unknown}=cartTotal();
+    const pickups=pickupSlots().map(s=>`<option>${s}</option>`).join('');
+    body.innerHTML = `
+      <div class="cart-list">${items}</div>
+      <div class="cart-total"><span>Total estimé</span><span>~ ${eur(sum)}</span></div>
+      <p class="cart-note">Estimation indicative. Les produits vendus au poids sont pesés en magasin, le prix final peut varier.${unknown?' Les produits « prix en magasin » ne sont pas comptés dans ce total.':''}</p>
+      <div class="modal-field"><label>Créneau de récupération</label><select id="cartPickup">${pickups}</select><small>Vos produits sont mis de côté <b>pendant 1h</b> à partir du créneau choisi.</small></div>
+      <div class="modal-field"><label>Votre nom</label><input type="text" id="cartName" placeholder="Ex : Awa Diallo"></div>
+      <div class="modal-field"><label>Votre numéro de téléphone</label><input type="tel" id="cartPhone" placeholder="XX XX XX XX XX"><small>Le magasin vous prévient en cas d'indisponibilité.</small></div>
+      <div class="modal-err" id="cartErr"></div>
+      <label class="modal-consent"><input type="checkbox" id="cartConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter au sujet de ma réservation. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="/politique-confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
+      <p class="modal-wa-note">📲 En validant, WhatsApp s'ouvre avec votre réservation déjà rédigée. Appuyez bien sur « Envoyer » pour qu'elle soit prise en compte.</p>
+      <button class="btn modal-submit" onclick="sendCart()">Réserver via WhatsApp</button>`;
+  }
+  async function sendCart(){
+    const name=(document.getElementById('cartName').value||'').trim();
+    const phone=(document.getElementById('cartPhone').value||'').trim();
+    const pickup=document.getElementById('cartPickup').value;
+    const consent=document.getElementById('cartConsent');
+    const err=document.getElementById('cartErr');
+    if(!cart.length){ err.textContent='Votre réservation est vide.'; err.classList.add('show'); return; }
     if(!name){ err.textContent='Indiquez votre nom.'; err.classList.add('show'); return; }
-    if(qty<=0){ err.textContent='Indiquez une quantité valide.'; err.classList.add('show'); return; }
     if(phone.replace(/\D/g,'').length<8){ err.textContent='Indiquez un numéro de téléphone valide.'; err.classList.add('show'); return; }
-    const consent = document.getElementById('resConsent');
     if(!consent || !consent.checked){ err.textContent='Merci de cocher la case de consentement pour continuer.'; err.classList.add('show'); return; }
+    const btn=document.querySelector('#cartModal .modal-submit'); if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
 
-    const btn = document.querySelector('.modal-submit');
-    if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
-    const data = { nom:name, produit:reserveProduct.name, produit_id:reserveProduct.id, quantite:qty, unite:unit, telephone:phone };
-
-    // 1) On enregistre la réservation en base : le gérant ne perd JAMAIS une commande,
-    //    même si le client ne va pas au bout (visible ensuite dans le back-office).
-    try { await sb.from('reservations').insert(data); } catch(e){ console.warn('reservations:', e); }
+    // 1) Enregistrement en base (une ligne par produit) : le gérant ne perd jamais une commande.
+    const rows=cart.map(it=>({ nom:name, produit:it.name, produit_id:it.id, quantite:it.qty, unite:it.resUnit, telephone:phone, heure_recup:pickup }));
+    try { await sb.from('reservations').insert(rows); } catch(e){ console.warn('reservations:', e); }
 
     // 2) Notification du gérant
-    let auto = false;
+    let auto=false;
     if(RESERVATION_WEBHOOK){
-      // Envoi AUTOMATIQUE via Make (le client n'a rien à faire)
-      try {
-        await fetch(RESERVATION_WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
-        auto = true;
-      } catch(e){ console.warn('webhook:', e); }
+      try { await fetch(RESERVATION_WEBHOOK, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({nom:name, telephone:phone, heure_recup:pickup, items:cart})}); auto=true; }
+      catch(e){ console.warn('webhook:', e); }
     }
+    const {sum,unknown}=cartTotal();
     if(!auto){
-      // Repli tant que l'envoi auto n'est pas configuré : on ouvre WhatsApp pré-rempli
-      const msg =
-        `Bonjour Gamme Market 👋\n`+
-        `Réservation 1h :\n`+
-        `• Nom : ${name}\n`+
-        `• Produit : ${reserveProduct.name}\n`+
-        `• Quantité : ${qty} ${unit}\n`+
-        `• Numéro : ${phone}`;
+      let msg=`Bonjour Gamme Market 👋\nRéservation (mise de côté 1h) :\n`;
+      cart.forEach(it=>{ const l=estimateLine(it); msg+=`• ${it.name} — ${it.qty} ${it.resUnit}${l!=null?` (~${eur(l)})`:''}\n`; });
+      msg+=`\nTotal estimé : ~${eur(sum)}${unknown?' (hors produits au prix magasin)':''}\n`;
+      msg+=`Récupération : ${pickup}\nNom : ${name}\nNuméro : ${phone}`;
       window.open('https://wa.me/'+WHATSAPP_GERANT+'?text='+encodeURIComponent(msg), '_blank');
     }
 
-    const successHtml = auto
+    document.getElementById('cartBody').innerHTML = auto
       ? `<div class="modal-success">
           <div class="ok">✓</div>
           <h3>Merci ${name} !</h3>
-          <p>Votre réservation pour <b>${reserveProduct.name}</b> a été transmise automatiquement au magasin. Le produit est mis de côté pendant 1h. Le magasin vous recontacte au <b>${phone}</b> en cas de rupture.</p>
-          <button class="btn" onclick="closeReserve()">Parfait, merci</button>
+          <p>Votre réservation a été transmise au magasin. Vos produits sont mis de côté <b>pendant 1h</b> (${pickup}). Le magasin vous recontacte au <b>${phone}</b> en cas d'indisponibilité.</p>
+          <button class="btn" onclick="closeCart()">Parfait, merci</button>
         </div>`
       : `<div class="modal-success">
           <div class="ok">📲</div>
           <h3>Plus qu'une étape, ${name} !</h3>
-          <p>WhatsApp vient de s'ouvrir avec votre demande pour <b>${reserveProduct.name}</b>. <b>Appuyez bien sur « Envoyer »</b> dans WhatsApp : sans cette validation, le magasin ne reçoit pas votre réservation.</p>
-          <p class="modal-call">Un doute ou une erreur ? Appelez le magasin au <a href="tel:+33784576065">07 84 57 60 65</a> pour vérifier que votre commande a bien été reçue.</p>
-          <button class="btn" onclick="closeReserve()">C'est envoyé, merci !</button>
+          <p>WhatsApp vient de s'ouvrir avec votre réservation. <b>Appuyez bien sur « Envoyer »</b> : sans cette validation, le magasin ne la reçoit pas.</p>
+          <p class="modal-call">Un doute ? Appelez le magasin au <a href="tel:+33784576065">07 84 57 60 65</a>.</p>
+          <button class="btn" onclick="closeCart()">C'est envoyé, merci !</button>
         </div>`;
-    document.getElementById('reserveBody').innerHTML = successHtml;
+    cart=[]; saveCart(); updateCartButton();
   }
 
   // Bouton "retour en haut" + ombre du menu collant au défilement
