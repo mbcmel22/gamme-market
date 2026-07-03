@@ -458,33 +458,46 @@
     const d = new Date(iso);
     return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   }
+  function groupReservations(list){
+    const groups=[], map={};
+    list.forEach(r=>{
+      const k=(r.nom||'')+'|'+(r.telephone||'')+'|'+(r.heure_recup||'')+'|'+String(r.created_at||'').slice(0,16);
+      if(!map[k]){ map[k]={nom:r.nom,telephone:r.telephone,heure_recup:r.heure_recup,created_at:r.created_at,items:[],ids:[]}; groups.push(map[k]); }
+      map[k].items.push(r); map[k].ids.push(r.id);
+    });
+    return groups;
+  }
   function renderReservations(){
     const box = document.getElementById('resAdmin'); if(!box) return;
     if(!resList.length){ box.innerHTML = '<div class="loading">Aucune réservation pour le moment.</div>'; return; }
-    const head = `<div class="res-count">${resList.length} réservation${resList.length>1?'s':''}</div>`;
-    box.innerHTML = head + resList.map(r=>{
-      const tel = (r.telephone||'').replace(/\s+/g,'');
+    const groups = groupReservations(resList);
+    const head = `<div class="res-count">${groups.length} réservation${groups.length>1?'s':''} · ${resList.length} article${resList.length>1?'s':''}</div>`;
+    box.innerHTML = head + groups.map(g=>{
+      const tel = (g.telephone||'').replace(/\s+/g,'');
       const digits = tel.replace(/\D/g,'');
       const wa = digits ? (digits.startsWith('0') ? '33'+digits.slice(1) : digits) : '';
+      const items = g.items.map(it=>`<li>${esc(it.produit||'')}${it.quantite?` · ${it.quantite} ${esc(it.unite||'')}`:''}</li>`).join('');
       return `<div class="res-row">
         <div class="res-main">
-          <div class="res-top"><b>${esc(r.nom||'-')}</b><span class="res-date">${fmtResDate(r.created_at)}</span></div>
-          <div class="res-prod">${esc(r.produit||'')}${r.quantite?` · ${r.quantite} ${esc(r.unite||'')}`:''}</div>
-          <div class="res-tel">${esc(r.telephone||'-')}</div>
+          <div class="res-top"><b>${esc(g.nom||'-')}</b><span class="res-date">${fmtResDate(g.created_at)}</span></div>
+          ${g.heure_recup?`<div class="res-pickup">Récupération : ${esc(g.heure_recup)}</div>`:''}
+          <ul class="res-items">${items}</ul>
+          <div class="res-tel">${esc(g.telephone||'-')}</div>
         </div>
         <div class="res-actions">
           ${tel?`<a class="btn ghost res-btn" href="tel:${esc(tel)}">Appeler</a>`:''}
           ${wa?`<a class="btn ghost res-btn" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp</a>`:''}
-          <button class="btn res-btn res-del" onclick="deleteReservation(${r.id})">Traité ✓</button>
+          <button class="btn res-btn res-del" onclick="deleteReservation('${g.ids.join(',')}')">Traité ✓</button>
         </div>
       </div>`;
     }).join('');
   }
-  async function deleteReservation(id){
+  async function deleteReservation(idsStr){
     if(!confirm('Retirer cette réservation de la liste ?')) return;
-    const { error } = await sb.from('reservations').delete().eq('id', id);
+    const ids = String(idsStr).split(',').map(Number);
+    const { error } = await sb.from('reservations').delete().in('id', ids);
     if(error){ alert('Erreur : '+error.message); return; }
-    resList = resList.filter(r=>r.id!==id); renderReservations(); toast();
+    resList = resList.filter(r=>!ids.includes(r.id)); renderReservations(); toast();
   }
 
   function renderStats(){
