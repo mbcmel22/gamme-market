@@ -459,6 +459,19 @@
     const d = new Date(iso);
     return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
   }
+  const pad2 = n => String(n).padStart(2,'0');
+  // La commande est gardée 1h à partir du créneau choisi (ou de sa création si "Dès que possible").
+  function reservationExpiry(created_at, heure_recup){
+    const created = new Date(created_at);
+    const m = String(heure_recup||'').match(/(\d{1,2})h(\d{2})/);
+    let base;
+    if(m){
+      base = new Date(created);
+      base.setHours(parseInt(m[1],10), parseInt(m[2],10), 0, 0);
+      if(base < created) base.setDate(base.getDate()+1);   // créneau du lendemain
+    } else { base = created; }
+    return new Date(base.getTime() + 60*60*1000);
+  }
   function groupReservations(list){
     const groups=[], map={};
     list.forEach(r=>{
@@ -473,15 +486,23 @@
     if(!resList.length){ box.innerHTML = '<div class="loading">Aucune réservation pour le moment.</div>'; return; }
     const groups = groupReservations(resList);
     const head = `<div class="res-count">${groups.length} réservation${groups.length>1?'s':''} · ${resList.length} article${resList.length>1?'s':''}</div>`;
+    const now = new Date();
     box.innerHTML = head + groups.map(g=>{
       const tel = (g.telephone||'').replace(/\s+/g,'');
       const digits = tel.replace(/\D/g,'');
       const wa = digits ? (digits.startsWith('0') ? '33'+digits.slice(1) : digits) : '';
       const items = g.items.map(it=>`<li>${esc(it.produit||'')}${it.quantite?` · ${it.quantite} ${esc(it.unite||'')}`:''}</li>`).join('');
-      return `<div class="res-row">
+      const exp = reservationExpiry(g.created_at, g.heure_recup);
+      const expTxt = pad2(exp.getHours())+'h'+pad2(exp.getMinutes());
+      const expired = now > exp;
+      const mins = Math.round((exp - now)/60000);
+      const statusHtml = expired
+        ? `<span class="res-exp res-exp-out">Expirée · ${expTxt}</span>`
+        : `<span class="res-exp res-exp-in">À garder jusqu'à ${expTxt}${mins<=120?` · reste ${mins} min`:''}</span>`;
+      return `<div class="res-row${expired?' res-expired':''}">
         <div class="res-main">
           <div class="res-top"><b>${esc(g.nom||'-')}</b><span class="res-date">${fmtResDate(g.created_at)}</span></div>
-          ${g.heure_recup?`<div class="res-pickup">Récupération : ${esc(g.heure_recup)}</div>`:''}
+          <div class="res-pickup">${g.heure_recup?`Récupération : ${esc(g.heure_recup)} · `:''}${statusHtml}</div>
           <ul class="res-items">${items}</ul>
           <div class="res-tel">${esc(g.telephone||'-')}</div>
         </div>
@@ -500,6 +521,8 @@
     if(error){ alert('Erreur : '+error.message); return; }
     resList = resList.filter(r=>!ids.includes(r.id)); renderReservations(); toast();
   }
+  // Rafraîchit le suivi d'expiration chaque minute quand l'onglet Réservations est ouvert
+  setInterval(()=>{ const pane=document.getElementById('tab-reservations'); if(pane && !pane.classList.contains('hidden') && resList.length) renderReservations(); }, 60000);
 
   function renderStats(){
     const tot=products.length;
