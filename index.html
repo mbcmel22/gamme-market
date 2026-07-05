@@ -15,6 +15,7 @@
 <meta name="geo.position" content="47.0586;-0.8793">
 <meta name="ICBM" content="47.0586, -0.8793">
 <link rel="canonical" href="https://www.gammemarket-cholet.fr/">
+<link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="icon" type="image/webp" href="logo-carre.webp">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -613,12 +614,8 @@
   let cart = [];
   try { cart = JSON.parse(localStorage.getItem('gm_cart')||'[]') || []; } catch(e){ cart = []; }
   function saveCart(){ try { localStorage.setItem('gm_cart', JSON.stringify(cart)); } catch(e){} }
-  const unitPerKg = u => /\bkg\b|kilo/i.test(u||'');
-  function estimateLine(it){
-    if(!(it.price>0)) return null;                         // "Prix en magasin" : non estimable
-    if(unitPerKg(it.unit) && it.resUnit==='grammes') return it.price*it.qty/1000;
-    return it.price*it.qty;                                // estimation indicative
-  }
+  const WA_SVG = '<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 .5C7.4.5.5 7.4.5 16c0 2.8.7 5.4 2 7.7L.5 31.5l8-2.1c2.2 1.2 4.8 1.9 7.5 1.9 8.6 0 15.5-6.9 15.5-15.5S24.6.5 16 .5zm0 28.3c-2.4 0-4.7-.6-6.7-1.8l-.5-.3-4.8 1.3 1.3-4.7-.3-.5c-1.3-2.1-2-4.5-2-7 0-7.2 5.9-13.1 13.1-13.1S29.1 8.8 29.1 16 23.2 28.8 16 28.8zm7.2-9.8c-.4-.2-2.3-1.1-2.7-1.3-.4-.1-.6-.2-.9.2-.3.4-1 1.3-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1.1-2-2.4-2.2-2.8-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.4-.6.1-.3 0-.5 0-.7-.1-.2-.9-2.1-1.2-2.9-.3-.7-.5-.6-.8-.6h-.7c-.2 0-.6.1-1 .5-.3.4-1.3 1.3-1.3 3.1s1.3 3.6 1.5 3.9c.2.3 2.6 4 6.3 5.6.9.4 1.6.6 2.1.8.9.3 1.7.2 2.3.1.7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.2-.3-.3-.7-.4z"/></svg>';
+  function estimateLine(it){ return (it.price>0) ? it.price*it.qty : null; }   // estimation indicative
   function cartTotal(){ let sum=0, unknown=false; cart.forEach(it=>{ const l=estimateLine(it); if(l==null) unknown=true; else sum+=l; }); return {sum, unknown}; }
   function updateCartButton(){
     const btn=document.getElementById('cartBtn'); if(!btn) return;
@@ -633,22 +630,15 @@
     const s = statusOf(p.qty);
     const epuise = p.qty<=0;
     const photoBlock = p.image_url
-      ? `<div class="modal-photo" onclick="zoomPhoto('${p.image_url}')"><img src="${p.image_url}" alt="${p.name} · Gamme Market Cholet"><span class="zoom-hint">🔍 Agrandir</span></div>`
+      ? `<div class="modal-photo" onclick="zoomPhoto('${p.image_url}')"><img src="${p.image_url}" alt="${p.name} · Gamme Market Cholet"><span class="zoom-hint"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Agrandir</span></div>`
       : `<div class="modal-photo is-emoji" style="background:${p.color||'#EFE2CC'}">${p.emoji||'🛒'}</div>`;
-    const perKg = unitPerKg(p.unit);
-    const unitOpts = perKg
-      ? `<option value="kg">kg</option><option value="grammes">grammes</option><option value="unité(s)">unité(s)</option>`
-      : `<option value="unité(s)">unité(s)</option><option value="kg">kg</option><option value="grammes">grammes</option>`;
     document.getElementById('reserveBody').innerHTML = `
       ${photoBlock}
       <h3 class="modal-title">${p.name}</h3>
       <div class="modal-sub"><span class="unit">${p.unit||''} · ${(p.price&&p.price>0)?eur(p.price):'Prix en magasin'}</span> <span class="badge ${s.badge}">${s.label}</span></div>
       <p class="modal-intro">Ajoutez ce produit à votre réservation. Vous pourrez en ajouter d'autres avant de valider. Tout est mis de côté <b>pendant 1h</b>.</p>
       <div class="modal-field"><label>Quantité souhaitée</label>
-        <div class="qty-row">
-          <input type="number" id="resQty" min="1" value="1">
-          <select id="resUnit">${unitOpts}</select>
-        </div>
+        <input type="number" id="resQty" min="0.1" value="1" class="qty-solo">
       </div>
       <div class="modal-err" id="resErr"></div>
       <button class="btn modal-submit" onclick="addToCart()">Ajouter à ma réservation</button>
@@ -658,19 +648,18 @@
   }
   function addToCart(){
     const p = reserveProduct; if(!p) return;
-    const qty = parseInt(document.getElementById('resQty').value)||0;
-    const resUnit = document.getElementById('resUnit').value;
+    const qty = parseFloat(document.getElementById('resQty').value)||0;
     const err = document.getElementById('resErr');
     if(qty<=0){ err.textContent='Indiquez une quantité valide.'; err.classList.add('show'); return; }
-    const ex = cart.find(it=>it.id===p.id && it.resUnit===resUnit);
+    const ex = cart.find(it=>it.id===p.id);
     if(ex) ex.qty += qty;
-    else cart.push({ id:p.id, name:p.name, unit:p.unit, price:p.price, emoji:p.emoji, color:p.color, image_url:p.image_url, qty, resUnit });
+    else cart.push({ id:p.id, name:p.name, unit:p.unit, price:p.price, emoji:p.emoji, color:p.color, image_url:p.image_url, qty });
     saveCart(); updateCartButton();
     document.getElementById('reserveBody').innerHTML = `
       <div class="modal-success">
         <div class="ok">✓</div>
         <h3>Ajouté à votre réservation</h3>
-        <p><b>${p.name}</b> — ${qty} ${resUnit}</p>
+        <p><b>${p.name}</b> · Qté ${qty}</p>
         <div class="cart-confirm-actions">
           <button class="btn ghost" onclick="closeReserve()">Continuer mes achats</button>
           <button class="btn" onclick="closeReserve();openCart()">Voir ma réservation (${cart.length})</button>
@@ -692,15 +681,8 @@
   function removeItem(i){ cart.splice(i,1); saveCart(); updateCartButton(); renderCart(); }
   const pad2 = n => String(n).padStart(2,'0');
   function pickupSlots(){
-    const now=new Date(), day=now.getDay(), cfg=dayCfg(day);
     const slots=['Dès que possible'];
-    if(cfg){
-      const nowMin=now.getHours()*60+now.getMinutes();
-      const start=Math.max(Math.ceil((nowMin+20)/30)*30, hm(cfg.open)), close=hm(cfg.close);
-      let count=0;
-      for(let t=start; t<=close && count<8; t+=30, count++){ slots.push(`Aujourd'hui à ${pad2(Math.floor(t/60))}h${pad2(t%60)}`); }
-    }
-    if(slots.length<3){ const n=nextOpen(day); if(n){ const w=n.when==='demain'?'Demain':(n.when.charAt(0).toUpperCase()+n.when.slice(1)); slots.push(`${w} dès ${fmtH(n.open)}`); } }
+    for(let h=10; h<=18; h++) slots.push(pad2(h)+'h00');
     return slots;
   }
   function renderCart(){
@@ -710,7 +692,7 @@
       const l=estimateLine(it);
       return `<div class="cart-item">
         <div class="cart-item-main"><b>${it.name}</b><span class="cart-item-meta">${it.price>0?eur(it.price)+' / '+(it.unit||'u'):'Prix en magasin'}</span></div>
-        <div class="cart-qty"><button type="button" onclick="changeQty(${i},-1)" aria-label="Moins">–</button><span>${it.qty} ${it.resUnit}</span><button type="button" onclick="changeQty(${i},1)" aria-label="Plus">+</button></div>
+        <div class="cart-qty"><button type="button" onclick="changeQty(${i},-1)" aria-label="Moins">–</button><span>Qté ${it.qty}</span><button type="button" onclick="changeQty(${i},1)" aria-label="Plus">+</button></div>
         <div class="cart-line">${l==null?'<span class="price-ask">prix magasin</span>':'~ '+eur(l)}</div>
         <button class="cart-del" type="button" onclick="removeItem(${i})" aria-label="Retirer">✕</button>
       </div>`;
@@ -727,7 +709,7 @@
       <div class="modal-err" id="cartErr"></div>
       <label class="modal-consent"><input type="checkbox" id="cartConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter au sujet de ma réservation. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="/politique-confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
       <p class="modal-wa-note">📲 En validant, WhatsApp s'ouvre avec votre réservation déjà rédigée. Appuyez bien sur « Envoyer » pour qu'elle soit prise en compte.</p>
-      <button class="btn modal-submit" onclick="sendCart()">Réserver via WhatsApp</button>`;
+      <button class="btn modal-submit btn-wa" onclick="sendCart()"><span class="wa-ico">${WA_SVG}</span> Réserver via WhatsApp</button>`;
   }
   async function sendCart(){
     const name=(document.getElementById('cartName').value||'').trim();
@@ -742,7 +724,7 @@
     const btn=document.querySelector('#cartModal .modal-submit'); if(btn){ btn.disabled=true; btn.textContent='Envoi…'; }
 
     // 1) Enregistrement en base (une ligne par produit) : le gérant ne perd jamais une commande.
-    const rows=cart.map(it=>({ nom:name, produit:it.name, produit_id:it.id, quantite:it.qty, unite:it.resUnit, telephone:phone, heure_recup:pickup }));
+    const rows=cart.map(it=>({ nom:name, produit:it.name, produit_id:it.id, quantite:it.qty, unite:it.unit||'', telephone:phone, heure_recup:pickup }));
     try { await sb.from('reservations').insert(rows); } catch(e){ console.warn('reservations:', e); }
 
     // 2) Notification du gérant
@@ -754,7 +736,7 @@
     const {sum,unknown}=cartTotal();
     if(!auto){
       let msg=`Bonjour Gamme Market 👋\nRéservation (mise de côté 1h) :\n`;
-      cart.forEach(it=>{ const l=estimateLine(it); msg+=`• ${it.name} — ${it.qty} ${it.resUnit}${l!=null?` (~${eur(l)})`:''}\n`; });
+      cart.forEach(it=>{ const l=estimateLine(it); msg+=`• ${it.name} · Qté ${it.qty}${l!=null?` (~${eur(l)})`:''}\n`; });
       msg+=`\nTotal estimé : ~${eur(sum)}${unknown?' (hors produits au prix magasin)':''}\n`;
       msg+=`Récupération : ${pickup}\nNom : ${name}\nNuméro : ${phone}`;
       window.open('https://wa.me/'+WHATSAPP_GERANT+'?text='+encodeURIComponent(msg), '_blank');
@@ -768,7 +750,7 @@
           <button class="btn" onclick="closeCart()">Parfait, merci</button>
         </div>`
       : `<div class="modal-success">
-          <div class="ok">📲</div>
+          <div class="ok ok-wa"><span class="wa-ico">${WA_SVG}</span></div>
           <h3>Plus qu'une étape, ${name} !</h3>
           <p>WhatsApp vient de s'ouvrir avec votre réservation. <b>Appuyez bien sur « Envoyer »</b> : sans cette validation, le magasin ne la reçoit pas.</p>
           <p class="modal-call">Un doute ? Appelez le magasin au <a href="tel:+33784576065">07 84 57 60 65</a>.</p>
