@@ -543,10 +543,10 @@
     let rows = `<div class="borow head"><div>Produit (cliquez pour renommer)</div><div class="colhide">Prix (€)</div><div>Quantité</div><div>Disponibilité</div><div>Sur le site</div></div>`;
     rows += list.map(p=>{
       const s=statusOf(p.qty);
-      const visual = p.image_url ? `<img src="${p.image_url}" alt="" class="pemoji-img">` : (p.emoji||'🛒');
-      const nameSafe = (p.name||'').replace(/"/g,'&quot;');
+      const visual = p.image_url ? `<img src="${esc(p.image_url)}" alt="" class="pemoji-img">` : esc(p.emoji||'🛒');
+      const nameSafe = esc(p.name);
       return `<div class="borow" style="${p.visible?'':'opacity:.5'}">
-        <div class="pname"><label class="pemoji photo-upload" style="background:${p.color||'#EFE2CC'}" title="Cliquez pour ajouter ou changer la photo">${visual}<span class="photo-cam">📷</span><input type="file" accept="image/*" onchange="uploadPhoto(${p.id}, this)"></label>
+        <div class="pname"><label class="pemoji photo-upload" style="background:${esc(p.color||'#EFE2CC')}" title="Cliquez pour ajouter ou changer la photo">${visual}<span class="photo-cam">📷</span><input type="file" accept="image/*" onchange="uploadPhoto(${p.id}, this)"></label>
           <div style="flex:1;min-width:0">
             <input class="edit-name" value="${nameSafe}" onchange="renameProduct(${p.id}, this.value)" aria-label="Nom du produit">
             <div class="pcat"><select class="edit-unit edit-cat" onchange="setCategory(${p.id}, this.value)" aria-label="Catégorie">${catOptions(p.category)}</select> · <select class="edit-unit" onchange="setUnit(${p.id}, this.value)" aria-label="Unité">${unitOptions(p.unit)}</select></div>
@@ -567,7 +567,7 @@
   }
 
   /* ---------- Catégorie : menu déroulant + nouvelle catégorie ---------- */
-  function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
   function catOptions(current){
     const list = [...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
     if(current && !list.includes(current)) list.unshift(current);

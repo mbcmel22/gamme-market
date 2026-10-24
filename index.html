@@ -347,6 +347,9 @@
     return {label:"En stock", badge:"b-in"};
   }
   function eur(n){ return Number(n).toFixed(2).replace('.',',') + ' €'; }
+  // Échappement défensif : les champs produits/services viennent de la base (import catalogue inclus).
+  function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function escJs(s){ return (s==null?'':String(s)).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3c').replace(/\r?\n/g,' '); }
 
   function buildFoodCats(){
     const set = [...new Set(foodProducts.map(p=>p.category).filter(Boolean))]
@@ -356,7 +359,7 @@
   }
   function renderFilters(){
     document.getElementById('filterMenu').innerHTML = cats.map(c=>
-      `<button class="filter-opt ${c===activeCat?'active':''}" onclick="setCat('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
+      `<button class="filter-opt ${c===activeCat?'active':''}" onclick="setCat('${escJs(c)}')">${esc(c)}</button>`).join('');
     document.getElementById('filterCurrent').textContent = activeCat;
   }
   function toggleFilter(){ document.getElementById('filterMenu').classList.toggle('open'); }
@@ -370,13 +373,13 @@
   function productCard(p){
     const s = statusOf(p.qty);
     const qtyTxt = "";   // le nombre en rayon est masqué sur le site (l'étiquette de disponibilité reste)
-    const visual = p.image_url ? `<img src="${p.image_url}" alt="${p.name} · Gamme Market épicerie africaine Cholet" class="thumb-img" loading="lazy">` : `<span class="thumb-emoji">${p.emoji||'🛒'}</span>`;
+    const visual = p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)} · Gamme Market épicerie africaine Cholet" class="thumb-img" loading="lazy">` : `<span class="thumb-emoji">${esc(p.emoji||'🛒')}</span>`;
     const priceTxt = (p.price && p.price>0) ? eur(p.price) : 'Prix en magasin';
     return `<article class="prod" onclick="openReserve(${p.id})">
-        <div class="thumb ${p.image_url?'has-photo':''}" style="${p.image_url?'':'background:'+(p.color||'#EFE2CC')}">${visual}<span class="cat-tag">${p.category}</span></div>
+        <div class="thumb ${p.image_url?'has-photo':''}" style="${p.image_url?'':'background:'+esc(p.color||'#EFE2CC')}">${visual}<span class="cat-tag">${esc(p.category)}</span></div>
         <div class="body">
-          <h4>${p.name}</h4>
-          <span class="unit">${p.unit||''} ${qtyTxt}</span>
+          <h4>${esc(p.name)}</h4>
+          <span class="unit">${esc(p.unit||'')} ${qtyTxt}</span>
           <div class="foot"><span class="price ${(p.price&&p.price>0)?'':'price-ask'}">${priceTxt}</span><span class="badge ${s.badge}">${s.label}</span></div>
           <button class="reserve-btn" type="button">Mettre de côté</button>
         </div></article>`;
@@ -509,14 +512,14 @@
     grid.querySelectorAll('.svc-transfer').forEach(n=>n.remove());
     const html = servicesData.map((s,i)=>{
       const logo = TRANSFER_LOGOS[s.id];
-      const icHtml = logo ? `<div class="ic ic-logo"><img src="${logo}" alt="${s.name} · transfert d'argent à Cholet"></div>` : `<div class="ic">💸</div>`;
+      const icHtml = logo ? `<div class="ic ic-logo"><img src="${esc(logo)}" alt="${esc(s.name)} · transfert d'argent à Cholet"></div>` : `<div class="ic">💸</div>`;
       const desc = TRANSFER_DESC[s.id] || "Transfert d'argent international en magasin.";
       const badge = s.available
         ? '<span class="svc-status ok">● Disponible</span>'
         : '<span class="svc-status off">● Indisponible</span>';
       return `<div class="svc svc-transfer ${i===0?'feat':''} ${s.available?'':'is-off'}">
         ${icHtml}
-        <h3>${s.name} ${badge}</h3>
+        <h3>${esc(s.name)} ${badge}</h3>
         <p>${desc}</p>
         <p class="svc-hours">${s.hours||''}</p>
       </div>`;
@@ -630,12 +633,12 @@
     const s = statusOf(p.qty);
     const epuise = p.qty<=0;
     const photoBlock = p.image_url
-      ? `<div class="modal-photo" onclick="zoomPhoto('${p.image_url}')"><img src="${p.image_url}" alt="${p.name} · Gamme Market Cholet"><span class="zoom-hint"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Agrandir</span></div>`
-      : `<div class="modal-photo is-emoji" style="background:${p.color||'#EFE2CC'}">${p.emoji||'🛒'}</div>`;
+      ? `<div class="modal-photo" onclick="zoomPhoto('${escJs(p.image_url)}')"><img src="${esc(p.image_url)}" alt="${esc(p.name)} · Gamme Market Cholet"><span class="zoom-hint"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Agrandir</span></div>`
+      : `<div class="modal-photo is-emoji" style="background:${esc(p.color||'#EFE2CC')}">${esc(p.emoji||'🛒')}</div>`;
     document.getElementById('reserveBody').innerHTML = `
       ${photoBlock}
-      <h3 class="modal-title">${p.name}</h3>
-      <div class="modal-sub"><span class="unit">${p.unit||''} · ${(p.price&&p.price>0)?eur(p.price):'Prix en magasin'}</span> <span class="badge ${s.badge}">${s.label}</span></div>
+      <h3 class="modal-title">${esc(p.name)}</h3>
+      <div class="modal-sub"><span class="unit">${esc(p.unit||'')} · ${(p.price&&p.price>0)?eur(p.price):'Prix en magasin'}</span> <span class="badge ${s.badge}">${s.label}</span></div>
       <p class="modal-intro">Ajoutez ce produit à votre réservation. Vous pourrez en ajouter d'autres avant de valider. Tout est mis de côté <b>pendant 1h</b>.</p>
       <div class="modal-field"><label>Quantité souhaitée</label>
         <input type="number" id="resQty" min="0.1" value="1" class="qty-solo">
@@ -659,7 +662,7 @@
       <div class="modal-success">
         <div class="ok">✓</div>
         <h3>Ajouté à votre réservation</h3>
-        <p><b>${p.name}</b> · Qté ${qty}</p>
+        <p><b>${esc(p.name)}</b> · Qté ${qty}</p>
         <div class="cart-confirm-actions">
           <button class="btn ghost" onclick="closeReserve()">Continuer mes achats</button>
           <button class="btn" onclick="closeReserve();openCart()">Voir ma réservation (${cart.length})</button>
@@ -691,7 +694,7 @@
     const items=cart.map((it,i)=>{
       const l=estimateLine(it);
       return `<div class="cart-item">
-        <div class="cart-item-main"><b>${it.name}</b><span class="cart-item-meta">${it.price>0?eur(it.price)+' / '+(it.unit||'u'):'Prix en magasin'}</span></div>
+        <div class="cart-item-main"><b>${esc(it.name)}</b><span class="cart-item-meta">${it.price>0?eur(it.price)+' / '+esc(it.unit||'u'):'Prix en magasin'}</span></div>
         <div class="cart-qty"><button type="button" onclick="changeQty(${i},-1)" aria-label="Moins">–</button><span>Qté ${it.qty}</span><button type="button" onclick="changeQty(${i},1)" aria-label="Plus">+</button></div>
         <div class="cart-line">${l==null?'<span class="price-ask">prix magasin</span>':'~ '+eur(l)}</div>
         <button class="cart-del" type="button" onclick="removeItem(${i})" aria-label="Retirer">✕</button>
