@@ -555,3 +555,181 @@ footer a:hover{color:var(--gold)}
 .res-exp-in{background:#E8F7EE;color:#1C5E3C}
 .res-exp-out{background:#FBE3DE;color:#b3261e}
 .res-expired{opacity:.62}
+
+/* =====================================================================
+   REFONTE RAYONS · présentation façon grande surface + ticket de caisse
+   ===================================================================== */
+:root{ --leaf:#5E9B3C; --paper:#FFFDF8; --tile-line:#EDE2CF; --rule:#D8CAB3; }
+
+/* --- Barre de rayon : pastilles + recherche --- */
+.shop-bar{display:flex;align-items:center;gap:14px;margin:4px 0 30px;scroll-margin-top:104px}
+.chips{flex:1;min-width:0;display:flex;gap:9px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 40px),transparent)}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:9px;background:#fff;border:1.5px solid var(--tile-line);border-radius:100px;padding:4px 13px 4px 4px;font-family:inherit;font-size:.9rem;font-weight:600;color:var(--ink);cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.chip:hover{border-color:var(--green)}
+.chip-ic{width:34px;height:34px;border-radius:50%;background:#fff;display:grid;place-items:center;overflow:hidden;color:var(--green-dk);flex:0 0 auto}
+.chip-ic img{width:100%;height:100%;object-fit:contain;padding:3px}
+.chip-n{font-size:.72rem;font-weight:700;color:var(--muted);background:var(--sand);border-radius:100px;padding:1px 7px}
+.chip.is-on{background:var(--green-dk);border-color:var(--green-dk);color:#fff}
+.chip.is-on .chip-n{background:rgba(255,255,255,.16);color:#fff}
+.shop-search{flex:0 0 300px;display:flex;align-items:center;gap:9px;background:#fff;border:1.5px solid var(--tile-line);border-radius:100px;padding:10px 16px;color:var(--muted);cursor:text}
+.shop-search:focus-within{border-color:var(--green)}
+.shop-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:inherit;font-size:.95rem;color:var(--ink)}
+.shop-search input::-webkit-search-cancel-button{cursor:pointer}
+
+/* --- Tuile produit --- */
+.tile{position:relative;display:flex;flex-direction:column;min-width:0}
+.tile-top{position:relative;margin-bottom:11px}
+.tile-media{display:block;width:100%;aspect-ratio:1/1;background:#fff;border:1px solid var(--tile-line);border-radius:16px;overflow:hidden;cursor:pointer;padding:0;transition:border-color .2s,box-shadow .2s}
+.tile-media img{width:100%;height:100%;object-fit:contain;padding:11%;display:block}
+.tile-emoji{width:100%;height:100%;display:grid;place-items:center;font-size:3rem}
+.tile.is-in .tile-media{border-color:var(--leaf);box-shadow:0 0 0 1.5px var(--leaf)}
+.tile-flag{position:absolute;top:9px;left:9px;font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:100px;pointer-events:none}
+.tile-flag.b-low{background:var(--low-bg);color:var(--low)}
+.tile-flag.b-out{background:var(--out-bg);color:var(--out)}
+.tile-ctrl{position:absolute;right:8px;bottom:8px}
+.add{width:42px;height:42px;border-radius:50%;border:0;background:var(--green-dk);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 14px -6px rgba(23,58,46,.7);transition:transform .15s,background .15s}
+@media(hover:hover){.add:hover{background:var(--green);transform:scale(1.06)}}
+.add:active{transform:scale(.94)}
+.step{display:flex;align-items:center;height:42px;border-radius:100px;background:var(--green-dk);color:#fff;box-shadow:0 6px 14px -6px rgba(23,58,46,.7);animation:stepIn .18s ease-out}
+.step button{width:38px;height:42px;border:0;background:transparent;color:#fff;display:grid;place-items:center;cursor:pointer;border-radius:100px}
+@media(hover:hover){.step button:hover{background:rgba(255,255,255,.12)}}
+.step span{min-width:26px;text-align:center;font-weight:800;font-size:.95rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+@keyframes stepIn{from{opacity:.4;transform:scale(.85)}to{opacity:1;transform:none}}
+/* Étiquette prix : euros en grand, centimes en exposant */
+.tile-price{display:flex;align-items:flex-start;line-height:1;color:var(--ink);margin-bottom:5px;font-variant-numeric:tabular-nums}
+.tile-price .pe{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+.tile-price .pc{font-size:.9rem;font-weight:800;margin-top:2px}
+.tile-price .pcur{font-size:.9rem;font-weight:800;margin:2px 0 0 1px}
+.tile-price .pkg{align-self:flex-end;font-size:.74rem;font-weight:600;color:var(--muted);margin:0 0 2px 6px}
+.tile-ask{font-size:.9rem;font-weight:700;color:var(--terra-dk)}
+.tile-name{font-family:'Hanken Grotesk',sans-serif;font-size:.92rem;font-weight:600;line-height:1.3;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.tile-unit{font-size:.78rem;color:var(--muted);margin-top:3px}
+
+/* --- Étagères (vue "Tous les rayons") --- */
+.rail{margin-bottom:38px;padding:0}
+.rail:last-child{margin-bottom:6px}
+.rail-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.rail-head h3{flex:1;font-size:1.4rem;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+.rail-head h3 span{font-family:'Hanken Grotesk',sans-serif;font-size:.85rem;font-weight:600;color:var(--muted);margin-left:4px}
+.rail-nav{display:none;gap:6px}
+.rail-nav button{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--tile-line);background:#fff;color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.rail-nav button:hover{border-color:var(--green-dk);background:var(--green-dk);color:#fff}
+.rail-all{border:0;background:none;font-family:inherit;font-size:.9rem;font-weight:700;color:var(--green-dk);cursor:pointer;padding:6px 2px;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .15s}
+.rail-all:hover{text-decoration-color:currentColor}
+.rail-track{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 0 6px}
+.rail-track::-webkit-scrollbar{display:none}
+.rail-track .tile{flex:0 0 184px;scroll-snap-align:start}
+.rail-more{flex:0 0 150px;align-self:flex-start;aspect-ratio:150/184;border:1.5px dashed var(--rule);border-radius:16px;background:transparent;font-family:inherit;color:var(--green-dk);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;scroll-snap-align:start;transition:background .15s}
+.rail-more:hover{background:#fff}
+.rail-more b{font-family:'Fraunces',serif;font-size:1.9rem;font-weight:900;line-height:1}
+.rail-more span{font-size:.8rem;font-weight:600;text-align:center;color:var(--muted);line-height:1.3}
+
+/* --- Vue rayon / recherche : grille --- */
+.grid-head{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:20px}
+.grid-head .back{display:inline-flex;align-items:center;gap:4px;border:0;background:none;font-family:inherit;font-size:.9rem;font-weight:700;color:var(--green-dk);cursor:pointer;padding:4px 8px 4px 0}
+.grid-head h3{font-size:clamp(1.5rem,3vw,1.9rem);font-weight:700;letter-spacing:-.01em}
+.grid-head h3 span{font-family:'Hanken Grotesk',sans-serif;font-size:.9rem;font-weight:600;color:var(--muted);margin-left:6px;letter-spacing:0}
+.tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:28px 18px}
+.more-wrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:34px}
+.more{background:#fff;border:1.5px solid var(--green-dk);color:var(--green-dk);border-radius:100px;padding:12px 24px;font-family:inherit;font-size:.95rem;font-weight:700;cursor:pointer}
+.more:hover{background:var(--green-dk);color:#fff}
+.more-wrap span{font-size:.8rem;color:var(--muted)}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty p:first-child{font-size:1.05rem;font-weight:700;color:var(--ink);margin-bottom:4px}
+.empty .btn{margin-top:16px}
+
+/* --- Barre "Ma liste de courses" --- */
+.cart-bar{position:fixed;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));margin:0 auto;width:min(540px,calc(100% - 24px));z-index:140;display:flex;align-items:center;gap:12px;height:60px;padding:0 9px 0 10px;border:0;border-radius:20px;background:var(--green-dk);color:#fff;font-family:inherit;cursor:pointer;box-shadow:0 18px 34px -16px rgba(23,58,46,.85);text-align:left}
+.cart-bar[hidden]{display:none}
+.cb-count{min-width:36px;height:36px;padding:0 6px;border-radius:12px;background:#fff;color:var(--green-dk);display:grid;place-items:center;font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums}
+.cb-label{flex:1;font-weight:700;font-size:.98rem}
+.cb-total{font-weight:800;font-size:1rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cb-cta{background:var(--leaf);border-radius:12px;padding:10px 16px;font-weight:700;font-size:.92rem}
+.cart-bar.bump{animation:bump .38s ease-out}
+@keyframes bump{0%{transform:scale(1)}35%{transform:scale(1.035)}100%{transform:scale(1)}}
+body.has-cart{padding-bottom:86px}
+body.has-cart .totop{bottom:94px}
+
+/* --- Tiroir (ordinateur) / feuille (mobile) --- */
+.modal-overlay.drawer.open{align-items:stretch;justify-content:flex-end;padding:0}
+.drawer .cart-modal{max-width:440px;width:100%;height:100%;max-height:none;margin:0;border-radius:0;background:var(--sand);padding:22px 20px 30px;animation:drawerIn .28s cubic-bezier(.2,.8,.2,1)}
+.drawer .cart-modal .modal-title{font-size:1.45rem;padding-right:44px}
+@keyframes drawerIn{from{transform:translateX(100%)}to{transform:none}}
+@keyframes sheetIn{from{transform:translateY(100%)}to{transform:none}}
+
+/* --- Ticket de caisse --- */
+.receipt{position:relative;background:var(--paper);border-radius:6px 6px 0 0;padding:20px 18px 16px;margin:16px 0 34px;box-shadow:0 12px 26px -20px rgba(42,30,22,.55)}
+.receipt::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:12px;background:linear-gradient(-45deg,transparent 8px,var(--paper) 0) 0 0/16px 12px repeat-x,linear-gradient(45deg,transparent 8px,var(--paper) 0) 0 0/16px 12px repeat-x;filter:drop-shadow(0 3px 2px rgba(42,30,22,.07))}
+.rc-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;padding-bottom:13px;margin-bottom:2px;border-bottom:1.5px dashed var(--rule)}
+.rc-head strong{font-family:'Fraunces',serif;font-size:1.3rem;font-weight:900;margin-bottom:3px}
+.rc-head span{font-size:.78rem;color:var(--muted)}
+.rc-head span:last-child::first-letter{text-transform:uppercase}
+.rc-lines{list-style:none}
+.rc-line{display:grid;grid-template-columns:50px 1fr auto;gap:12px;align-items:start;padding:13px 0;border-bottom:1px dotted var(--rule)}
+.rc-line:last-child{border-bottom:0}
+.rc-thumb{width:50px;height:50px;border-radius:10px;background:#fff;border:1px solid var(--tile-line);display:grid;place-items:center;overflow:hidden;font-size:1.4rem}
+.rc-thumb img{width:100%;height:100%;object-fit:contain;padding:4px}
+.rc-info{min-width:0;display:flex;flex-direction:column}
+.rc-info b{font-size:.88rem;font-weight:600;line-height:1.28;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rc-info>span{font-size:.75rem;color:var(--muted);margin-top:2px}
+.rc-step{display:inline-flex;align-items:center;align-self:flex-start;margin-top:8px;height:32px;border:1.5px solid var(--tile-line);border-radius:100px;background:#fff}
+.rc-step button{width:32px;height:30px;border:0;background:transparent;color:var(--green-dk);display:grid;place-items:center;cursor:pointer;border-radius:100px}
+@media(hover:hover){.rc-step button:hover{background:var(--sand)}}
+.rc-step span{min-width:34px;text-align:center;font-weight:800;font-size:.84rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rc-amt{font-weight:700;font-size:.92rem;font-variant-numeric:tabular-nums;white-space:nowrap;padding-top:1px}
+.rc-amt em{font-style:normal;font-size:.74rem;font-weight:600;color:var(--muted)}
+.rc-sub{display:flex;justify-content:space-between;font-size:.84rem;color:var(--muted);padding-top:12px;margin-top:2px;border-top:1.5px dashed var(--rule);font-variant-numeric:tabular-nums}
+.rc-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:6px}
+.rc-total span{font-weight:700;font-size:1rem}
+.rc-total strong{font-family:'Fraunces',serif;font-size:1.7rem;font-weight:900;font-variant-numeric:tabular-nums}
+.rc-note{font-size:.74rem;color:var(--muted);margin-top:6px;line-height:1.4}
+
+/* --- Validation : créneau, coordonnées --- */
+.checkout .modal-field input{background:#fff}
+.slots{border:0;padding:0;margin:0 0 16px}
+.slots legend{font-weight:700;font-size:.9rem;margin-bottom:9px}
+.slot-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.slot{position:relative;cursor:pointer}
+.slot input{position:absolute;opacity:0;width:1px;height:1px}
+.slot span{display:block;background:#fff;border:1.5px solid var(--tile-line);border-radius:100px;padding:8px 13px;font-size:.85rem;font-weight:600;transition:background .15s,border-color .15s,color .15s}
+.slot:hover span{border-color:var(--green)}
+.slot input:checked+span{background:var(--green-dk);border-color:var(--green-dk);color:#fff}
+.slot input:focus-visible+span{outline:3px solid var(--gold);outline-offset:2px}
+.slots small{font-size:.78rem;color:var(--muted)}
+.checkout-note{font-size:.78rem;color:var(--muted);text-align:center;margin-top:10px;line-height:1.4}
+.cart-empty{text-align:center;padding:48px 12px;color:var(--muted)}
+.cart-empty p:first-child{font-size:1.1rem;font-weight:700;color:var(--ink);margin-bottom:4px}
+.cart-empty .btn{margin-top:18px}
+
+/* --- Focus clavier visible --- */
+.chip:focus-visible,.tile-media:focus-visible,.add:focus-visible,.step button:focus-visible,.rail-all:focus-visible,.rail-more:focus-visible,.rail-nav button:focus-visible,.more:focus-visible,.cart-bar:focus-visible,.rc-step button:focus-visible,.grid-head .back:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* --- Ordinateur --- */
+@media(min-width:821px){ .rail-nav{display:flex} }
+
+/* --- Mobile --- */
+@media(max-width:820px){
+  .shop-bar{flex-direction:column-reverse;align-items:stretch;gap:12px}
+  .shop-search{flex:0 0 auto}
+  .chips,.rail-track{margin:0 -24px;padding-left:24px;padding-right:24px;scroll-padding:0 24px}
+  .chips{-webkit-mask-image:none;mask-image:none}
+  .rail-track .tile{flex-basis:156px}
+  .rail-more{flex-basis:128px}
+  .tile-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 14px}
+  .tile-price .pe{font-size:1.45rem}
+  .rail-head h3{font-size:1.22rem}
+}
+@media(max-width:640px){
+  .modal-overlay.drawer.open{align-items:flex-end;justify-content:center}
+  .drawer .cart-modal{max-width:none;height:auto;max-height:92vh;max-height:92dvh;border-radius:22px 22px 0 0;padding-top:28px;animation-name:sheetIn}
+  .drawer .cart-modal::before{content:"";position:absolute;top:10px;left:50%;width:42px;height:5px;margin-left:-21px;border-radius:5px;background:var(--rule)}
+  .cart-bar{width:calc(100% - 20px);bottom:calc(10px + env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:reduce){
+  .step,.cart-bar.bump,.drawer .cart-modal{animation:none !important}
+  .add,.chip,.tile-media{transition:none}
+}
+
+/* Mobile : la barre de liste remplace le bouton "retour en haut" pour libérer les produits */
+@media(max-width:820px){ body.has-cart .totop{display:none} }

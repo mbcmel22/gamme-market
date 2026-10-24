@@ -134,27 +134,14 @@
         <h2>Les saveurs de chez vous, en stock</h2>
         <p>Une sélection de produits africains et exotiques mise à jour en temps réel. Disponibilité indiquée pour chaque article.</p>
       </div>
-      <div class="prod-toolbar">
-        <div class="toolbar-left">
-          <div class="filter-wrap">
-            <button class="filter-btn" id="filterBtn" onclick="toggleFilter()" aria-haspopup="true">
-              <span>🗂️ Filtrer</span><span class="filter-current" id="filterCurrent">Tous</span><span class="caret">▾</span>
-            </button>
-            <div class="filter-menu" id="filterMenu"></div>
-          </div>
-          <div class="prod-search">
-            <span>🔍</span>
-            <input type="text" id="searchFood" class="search-input" placeholder="Rechercher un produit…" oninput="onSearch(this.value)" aria-label="Rechercher un produit">
-          </div>
-        </div>
-        <span class="result-count" id="resultCount"></span>
+      <div class="shop-bar">
+        <div class="chips" id="chips-food" aria-label="Rayons"></div>
+        <label class="shop-search">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20.5" y1="20.5" x2="16.6" y2="16.6"/></svg>
+          <input type="search" id="searchFood" placeholder="Rechercher un produit, une marque…" oninput="shelfSearch('food', this.value)" aria-label="Rechercher un produit alimentaire">
+        </label>
       </div>
-      <div class="carousel">
-        <button class="car-arrow prev" id="carPrev" onclick="scrollCar(-1)" aria-label="Produits précédents">‹</button>
-        <div class="car-track" id="prodGrid"><div class="loading">Chargement des produits…</div></div>
-        <button class="car-arrow next" id="carNext" onclick="scrollCar(1)" aria-label="Produits suivants">›</button>
-      </div>
-      <p class="swipe-hint">← Faites glisser pour parcourir les produits →</p>
+      <div class="shop-body" id="shop-food"><div class="loading">Chargement des produits…</div></div>
     </div>
   </section>
 
@@ -165,27 +152,14 @@
         <h2>Cosmétiques, produits &amp; accessoires beauté</h2>
         <p>Beurre de karité, savon noir, soins capillaires et accessoires : prenez soin de vous avec nos produits authentiques.</p>
       </div>
-      <div class="prod-toolbar">
-        <div class="toolbar-left">
-          <div class="filter-wrap">
-            <button class="filter-btn" id="filterBtnB" onclick="toggleBeautyFilter()" aria-haspopup="true">
-              <span>🗂️ Filtrer</span><span class="filter-current" id="filterCurrentB">Tous</span><span class="caret">▾</span>
-            </button>
-            <div class="filter-menu" id="filterMenuB"></div>
-          </div>
-          <div class="prod-search">
-            <span>🔍</span>
-            <input type="text" id="searchBeauty" class="search-input" placeholder="Rechercher un produit…" oninput="onBeautySearch(this.value)" aria-label="Rechercher un produit beauté">
-          </div>
-        </div>
-        <span class="result-count" id="resultCountB"></span>
+      <div class="shop-bar">
+        <div class="chips" id="chips-beauty" aria-label="Rayons"></div>
+        <label class="shop-search">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="20.5" y1="20.5" x2="16.6" y2="16.6"/></svg>
+          <input type="search" id="searchBeauty" placeholder="Rechercher un soin, une marque…" oninput="shelfSearch('beauty', this.value)" aria-label="Rechercher un produit beauté">
+        </label>
       </div>
-      <div class="carousel">
-        <button class="car-arrow prev" onclick="scrollCar(-1,'beauteGrid')" aria-label="Produits précédents">‹</button>
-        <div class="car-track" id="beauteGrid"></div>
-        <button class="car-arrow next" onclick="scrollCar(1,'beauteGrid')" aria-label="Produits suivants">›</button>
-      </div>
-      <p class="swipe-hint">← Faites glisser pour parcourir →</p>
+      <div class="shop-body" id="shop-beauty"><div class="loading">Chargement des produits…</div></div>
     </div>
   </section>
 
@@ -311,18 +285,20 @@
 </div>
 
 <!-- Modale panier de réservation -->
-<div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
-  <div class="modal cart-modal">
+<div class="modal-overlay drawer" id="cartModal" onclick="if(event.target===this)closeCart()">
+  <div class="modal cart-modal" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
     <button class="modal-close" onclick="closeCart()" aria-label="Fermer">✕</button>
-    <h3 class="modal-title">Ma réservation</h3>
+    <h3 class="modal-title" id="cartTitle">Ma liste de courses</h3>
     <div id="cartBody"></div>
   </div>
 </div>
 
-<!-- Bouton panier flottant -->
-<button class="cart-fab" id="cartBtn" onclick="openCart()" style="display:none" aria-label="Voir ma réservation">
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-  <span class="cart-fab-count" id="cartCount">0</span>
+<!-- Barre "Ma liste de courses" -->
+<button class="cart-bar" id="cartBar" onclick="openCart()" hidden aria-label="Voir ma liste de courses">
+  <span class="cb-count" id="cbCount">0</span>
+  <span class="cb-label">Ma liste de courses</span>
+  <span class="cb-total" id="cbTotal"></span>
+  <span class="cb-cta">Voir</span>
 </button>
 
 <button class="totop" id="toTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Revenir en haut">↑</button>
@@ -351,116 +327,178 @@
   function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
   function escJs(s){ return (s==null?'':String(s)).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/</g,'\\x3c').replace(/\r?\n/g,' '); }
 
-  function buildFoodCats(){
-    const set = [...new Set(foodProducts.map(p=>p.category).filter(Boolean))]
-      .sort((a,b)=>a.localeCompare(b,'fr'));
-    cats = ["Tous", ...set];
-    if(!cats.includes(activeCat)) activeCat = "Tous";
-  }
-  function renderFilters(){
-    document.getElementById('filterMenu').innerHTML = cats.map(c=>
-      `<button class="filter-opt ${c===activeCat?'active':''}" onclick="setCat('${escJs(c)}')">${esc(c)}</button>`).join('');
-    document.getElementById('filterCurrent').textContent = activeCat;
-  }
-  function toggleFilter(){ document.getElementById('filterMenu').classList.toggle('open'); }
-  function setCat(c){
-    activeCat=c; searchQuery="";
-    const si=document.getElementById('searchFood'); if(si) si.value="";
-    document.getElementById('filterMenu').classList.remove('open');
-    renderFilters(); renderGrid();
-  }
+  /* ===== Rayons façon grande surface : pastilles, étagères, grille ===== */
+  const PAGE = 24, RAIL_MAX = 12;
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const shelves = {
+    food:   { list:()=>foodProducts,   cat:'Tous', q:'', limit:PAGE, all:'Tous les rayons', section:'produits', search:'searchFood' },
+    beauty: { list:()=>beautyProducts, cat:'Tous', q:'', limit:PAGE, all:'Toute la beauté', section:'beaute',   search:'searchBeauty' }
+  };
+  const isKg = u => /\bkg\b/i.test(u||'');
+  const showUnit = u => !!u && !isKg(u) && !/pi[eè]ce/i.test(u);   // « Le kg » est déjà sur l'étiquette, « À la pièce » est le cas par défaut
+  const ORDER = ['fruits','epicerie salee','feculents','huiles','surgeles','epicerie sucree','boissons','aperitifs','conserves','bebe','cosmetiques','beaute'];
+  const rank = c => { const n = norm(c); const i = ORDER.findIndex(k=>n.includes(k)); return i<0 ? 99 : i; };
+  const ICON = {
+    grid:  '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>',
+    left:  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>',
+    right: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>',
+    plus:  '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    minus: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/></svg>'
+  };
+  const jsArg = s => esc(escJs(s));   // chaîne sûre dans un onclick="...('…')"
 
-  function productCard(p){
+  function priceHtml(p){
+    if(!(p.price>0)) return '<span class="tile-ask">Prix en magasin</span>';
+    const [e,c] = Number(p.price).toFixed(2).split('.');
+    return `<span class="pe">${e}</span><span class="pc">,${c}</span><span class="pcur">€</span>${isKg(p.unit)?'<span class="pkg">le kg</span>':''}`;
+  }
+  function inCart(id){ return cart.find(it=>it.id===id); }
+  function qtyLabel(it){ return isKg(it.unit) ? `${it.qty} kg` : String(it.qty); }
+  function ctrlHtml(p){
+    const it = inCart(p.id), nm = esc(p.name);
+    if(!it) return `<button class="add" type="button" onclick="quickAdd(${p.id})" aria-label="Ajouter ${nm} à ma liste">${ICON.plus}</button>`;
+    return `<div class="step" role="group" aria-label="Quantité de ${nm}">
+        <button type="button" onclick="quickStep(${p.id},-1)" aria-label="${it.qty===1?'Retirer de ma liste':'Un de moins'}">${it.qty===1?ICON.trash:ICON.minus}</button>
+        <span aria-live="polite">${qtyLabel(it)}</span>
+        <button type="button" onclick="quickStep(${p.id},1)" aria-label="Un de plus">${ICON.plus}</button>
+      </div>`;
+  }
+  function tile(p){
     const s = statusOf(p.qty);
-    const qtyTxt = "";   // le nombre en rayon est masqué sur le site (l'étiquette de disponibilité reste)
-    const visual = p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)} · Gamme Market épicerie africaine Cholet" class="thumb-img" loading="lazy">` : `<span class="thumb-emoji">${esc(p.emoji||'🛒')}</span>`;
-    const priceTxt = (p.price && p.price>0) ? eur(p.price) : 'Prix en magasin';
-    return `<article class="prod" onclick="openReserve(${p.id})">
-        <div class="thumb ${p.image_url?'has-photo':''}" style="${p.image_url?'':'background:'+esc(p.color||'#EFE2CC')}">${visual}<span class="cat-tag">${esc(p.category)}</span></div>
-        <div class="body">
-          <h4>${esc(p.name)}</h4>
-          <span class="unit">${esc(p.unit||'')} ${qtyTxt}</span>
-          <div class="foot"><span class="price ${(p.price&&p.price>0)?'':'price-ask'}">${priceTxt}</span><span class="badge ${s.badge}">${s.label}</span></div>
-          <button class="reserve-btn" type="button">Mettre de côté</button>
-        </div></article>`;
+    const flag = s.badge==='b-in' ? '' : `<span class="tile-flag ${s.badge}">${s.label}</span>`;
+    const media = p.image_url
+      ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)} · Gamme Market Cholet" loading="lazy" decoding="async">`
+      : `<span class="tile-emoji" style="background:${esc(p.color||'#EFE2CC')}">${esc(p.emoji||'🛒')}</span>`;
+    return `<article class="tile${inCart(p.id)?' is-in':''}" data-tile="${p.id}">
+        <div class="tile-top">
+          <button class="tile-media" type="button" onclick="openReserve(${p.id})" aria-label="Voir ${esc(p.name)}">${media}</button>
+          ${flag}
+          <div class="tile-ctrl" data-ctrl="${p.id}">${ctrlHtml(p)}</div>
+        </div>
+        <div class="tile-price">${priceHtml(p)}</div>
+        <h4 class="tile-name">${esc(p.name)}</h4>
+        ${showUnit(p.unit)?`<span class="tile-unit">${esc(p.unit)}</span>`:''}
+      </article>`;
+  }
+  function refreshCtrl(id){
+    const p = allProducts.find(x=>x.id===id); if(!p) return;
+    const on = !!inCart(id);
+    document.querySelectorAll(`[data-ctrl="${id}"]`).forEach(el=>{ el.innerHTML = ctrlHtml(p); });
+    document.querySelectorAll(`[data-tile="${id}"]`).forEach(el=>el.classList.toggle('is-in', on));
+  }
+  function refreshAllCtrls(){ document.querySelectorAll('[data-ctrl]').forEach(el=>refreshCtrl(Number(el.dataset.ctrl))); }
+  function quickAdd(id){
+    const p = allProducts.find(x=>x.id===id); if(!p) return;
+    const ex = inCart(id);
+    if(ex) ex.qty += 1;
+    else cart.push({ id:p.id, name:p.name, unit:p.unit, price:p.price, emoji:p.emoji, color:p.color, image_url:p.image_url, qty:1 });
+    saveCart(); updateCartButton(true); refreshCtrl(id);
+  }
+  function quickStep(id, d){
+    const i = cart.findIndex(it=>it.id===id); if(i<0) return;
+    cart[i].qty += d; if(cart[i].qty<=0) cart.splice(i,1);
+    saveCart(); updateCartButton(d>0); refreshCtrl(id);
   }
 
-  function renderGrid(){
-    const list = searchQuery
-      ? foodProducts.filter(p=>p.name.toLowerCase().includes(searchQuery))
-      : foodProducts.filter(p=>activeCat==="Tous"||p.category===activeCat);
-    const grid = document.getElementById('prodGrid');
-    document.getElementById('resultCount').textContent =
-      list.length ? `${list.length} produit${list.length>1?'s':''}` : "";
-    if(!list.length){ grid.innerHTML = '<div class="loading">Aucun produit ne correspond à votre recherche.</div>'; return; }
-    grid.innerHTML = list.map(productCard).join('');
-    grid.scrollTo({left:0});
+  function catsOf(key){
+    const m = new Map();
+    shelves[key].list().forEach(p=>{
+      if(!p.category) return;
+      if(!m.has(p.category)) m.set(p.category, { name:p.category, n:0, img:p.image_url });
+      m.get(p.category).n++;
+    });
+    return [...m.values()].sort((a,b)=> rank(a.name)-rank(b.name) || b.n-a.n);
   }
+  function renderChips(key){
+    const sh = shelves[key], el = document.getElementById('chips-'+key); if(!el) return;
+    const chip = (val, label, n, img) => {
+      const on = sh.cat===val && !sh.q;
+      return `<button type="button" class="chip${on?' is-on':''}" aria-pressed="${on}" onclick="setShelfCat('${key}','${jsArg(val)}')">
+          <span class="chip-ic">${img?`<img src="${esc(img)}" alt="" loading="lazy" decoding="async">`:ICON.grid}</span>
+          <span class="chip-txt">${esc(label)}</span><span class="chip-n">${n}</span>
+        </button>`;
+    };
+    el.innerHTML = chip('Tous', sh.all, sh.list().length, '') + catsOf(key).map(c=>chip(c.name, c.name, c.n, c.img)).join('');
+  }
+  function filtered(key){
+    const sh = shelves[key], list = sh.list();
+    if(sh.q){ const q = norm(sh.q); return list.filter(p=> norm(p.name).includes(q) || norm(p.category).includes(q)); }
+    return sh.cat==='Tous' ? list : list.filter(p=>p.category===sh.cat);
+  }
+  function railHtml(key, c, i){
+    const items = shelves[key].list().filter(p=>p.category===c.name);
+    const id = `rail-${key}-${i}`, more = items.length - RAIL_MAX, val = jsArg(c.name);
+    return `<section class="rail" aria-label="${esc(c.name)}">
+        <header class="rail-head">
+          <h3>${esc(c.name)} <span>${c.n}</span></h3>
+          <div class="rail-nav">
+            <button type="button" onclick="scrollCar(-1,'${id}')" aria-label="Produits précédents">${ICON.left}</button>
+            <button type="button" onclick="scrollCar(1,'${id}')" aria-label="Produits suivants">${ICON.right}</button>
+          </div>
+          <button type="button" class="rail-all" onclick="setShelfCat('${key}','${val}')">Tout voir</button>
+        </header>
+        <div class="rail-track" id="${id}">
+          ${items.slice(0,RAIL_MAX).map(tile).join('')}
+          ${more>0?`<button type="button" class="rail-more" onclick="setShelfCat('${key}','${val}')"><b>+${more}</b><span>autres produits dans ce rayon</span></button>`:''}
+        </div>
+      </section>`;
+  }
+  function renderShelf(key){
+    const sh = shelves[key], body = document.getElementById('shop-'+key); if(!body) return;
+    const sec = document.getElementById(sh.section);
+    if(key==='beauty' && sec) sec.style.display = sh.list().length ? '' : 'none';
+    renderChips(key);
+    if(!sh.q && sh.cat==='Tous'){ body.innerHTML = catsOf(key).map((c,i)=>railHtml(key,c,i)).join(''); return; }
+    const list = filtered(key);
+    const title = sh.q ? `Résultats pour « ${esc(sh.q)} »` : esc(sh.cat);
+    const head = `<div class="grid-head">
+        <button type="button" class="back" onclick="setShelfCat('${key}','Tous')">${ICON.left}<span>${esc(sh.all)}</span></button>
+        <h3>${title} <span>${list.length} produit${list.length>1?'s':''}</span></h3>
+      </div>`;
+    if(!list.length){
+      body.innerHTML = head + `<div class="empty"><p>Aucun produit ne correspond à « ${esc(sh.q)} ».</p><p>Essayez un autre mot, ou parcourez les rayons.</p><button type="button" class="btn ghost" onclick="setShelfCat('${key}','Tous')">Voir tous les rayons</button></div>`;
+      return;
+    }
+    const shown = list.slice(0, sh.limit), rest = list.length - shown.length;
+    body.innerHTML = head + `<div class="tile-grid">${shown.map(tile).join('')}</div>` +
+      (rest>0 ? `<div class="more-wrap"><button type="button" class="more" onclick="shelfMore('${key}')">Afficher ${Math.min(rest,PAGE)} produits de plus</button><span>${shown.length} sur ${list.length}</span></div>` : '');
+  }
+  function setShelfCat(key, cat){
+    const sh = shelves[key]; sh.cat = cat; sh.q = ''; sh.limit = PAGE;
+    const si = document.getElementById(sh.search); if(si) si.value = '';
+    renderShelf(key);
+    const bar = document.getElementById('chips-'+key); if(!bar) return;
+    const box = bar.closest('.shop-bar');
+    if(box && box.getBoundingClientRect().top < 90) box.scrollIntoView({ block:'start', behavior: reduceMotion?'auto':'smooth' });
+    const on = bar.querySelector('.chip.is-on');
+    if(on) bar.scrollTo({ left: on.offsetLeft - (bar.clientWidth - on.clientWidth)/2, behavior: reduceMotion?'auto':'smooth' });
+  }
+  let searchTimer;
+  function shelfSearch(key, v){
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(()=>{ const sh = shelves[key]; sh.q = v.trim(); sh.limit = PAGE; renderShelf(key); }, 160);
+  }
+  function shelfMore(key){ shelves[key].limit += PAGE; renderShelf(key); }
 
-  /* ---- Filtres & recherche : section Cosmétiques & Beauté ---- */
-  let beautyCats = ["Tous"];
-  let activeBeautyCat = "Tous";
-  let beautySearch = "";
-  function buildBeautyCats(){
-    const set = [...new Set(beautyProducts.map(p=>p.category).filter(Boolean))]
-      .sort((a,b)=>a.localeCompare(b,'fr'));
-    beautyCats = ["Tous", ...set];
-    if(!beautyCats.includes(activeBeautyCat)) activeBeautyCat = "Tous";
-  }
-  function renderBeautyFilters(){
-    const menu = document.getElementById('filterMenuB');
-    if(!menu) return;
-    menu.innerHTML = beautyCats.map(c=>
-      `<button class="filter-opt ${c===activeBeautyCat?'active':''}" onclick="setBeautyCat('${c.replace(/'/g,"\\'")}')">${c}</button>`).join('');
-    document.getElementById('filterCurrentB').textContent = activeBeautyCat;
-  }
-  function toggleBeautyFilter(){ document.getElementById('filterMenuB').classList.toggle('open'); }
-  function setBeautyCat(c){
-    activeBeautyCat = c; beautySearch = "";
-    const si = document.getElementById('searchBeauty'); if(si) si.value = "";
-    document.getElementById('filterMenuB').classList.remove('open');
-    renderBeautyFilters(); renderBeauty();
-  }
-  function onBeautySearch(v){ beautySearch = v.toLowerCase().trim(); renderBeauty(); }
-
-  function renderBeauty(){
-    const sec = document.getElementById('beaute');
-    const grid = document.getElementById('beauteGrid');
-    if(!sec || !grid) return;
-    if(!beautyProducts.length){ sec.style.display='none'; return; }
-    sec.style.display = '';
-    const list = beautySearch
-      ? beautyProducts.filter(p=>p.name.toLowerCase().includes(beautySearch))
-      : beautyProducts.filter(p=>activeBeautyCat==="Tous"||p.category===activeBeautyCat);
-    const rc = document.getElementById('resultCountB');
-    if(rc) rc.textContent = list.length ? `${list.length} produit${list.length>1?'s':''}` : "";
-    if(!list.length){ grid.innerHTML = '<div class="loading">Aucun produit ne correspond à votre recherche.</div>'; return; }
-    grid.innerHTML = list.map(productCard).join('');
-    grid.scrollTo({left:0});
-  }
-
-  // Carrousel : flèches (ordinateur), le swipe fonctionne nativement sur mobile
+  // Défilement des étagères (flèches sur ordinateur, glisser sur mobile)
   function scrollCar(dir, trackId){
-    const t = document.getElementById(trackId || 'prodGrid');
-    if(!t) return;
-    t.scrollBy({ left: dir * Math.min(t.clientWidth*0.85, 540), behavior:'smooth' });
+    const t = document.getElementById(trackId); if(!t) return;
+    t.scrollBy({ left: dir * Math.min(t.clientWidth*0.85, 620), behavior: reduceMotion?'auto':'smooth' });
   }
 
   async function loadProducts(){
     const { data, error } = await sb.from('products')
       .select('*').eq('visible', true).order('sort_order', {ascending:true});
     if(error){
-      document.getElementById('prodGrid').innerHTML =
-        '<div class="loading">⚠️ Impossible de charger les produits. Vérifie la configuration Supabase (config.js).</div>';
+      document.getElementById('shop-food').innerHTML =
+        '<div class="loading">Les produits ne se chargent pas pour le moment. Rechargez la page dans quelques instants.</div>';
       console.error(error); return;
     }
     allProducts = data || [];
     foodProducts   = allProducts.filter(p=>!isBeauty(p.category));
     beautyProducts = allProducts.filter(p=> isBeauty(p.category));
-    buildFoodCats();
-    renderFilters(); renderGrid();
-    buildBeautyCats();
-    renderBeautyFilters(); renderBeauty();
+    renderShelf('food'); renderShelf('beauty');
   }
   loadProducts();
   initSettingsThenServices();
@@ -594,8 +632,6 @@
   applyStoreHours();
   setInterval(updateOpenPill, 60000);
 
-  // Recherche de produits
-  function onSearch(v){ searchQuery = v.toLowerCase().trim(); renderGrid(); }
 
   // Menu mobile (hamburger)
   function toggleMenu(){
@@ -620,10 +656,13 @@
   const WA_SVG = '<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M16 .5C7.4.5.5 7.4.5 16c0 2.8.7 5.4 2 7.7L.5 31.5l8-2.1c2.2 1.2 4.8 1.9 7.5 1.9 8.6 0 15.5-6.9 15.5-15.5S24.6.5 16 .5zm0 28.3c-2.4 0-4.7-.6-6.7-1.8l-.5-.3-4.8 1.3 1.3-4.7-.3-.5c-1.3-2.1-2-4.5-2-7 0-7.2 5.9-13.1 13.1-13.1S29.1 8.8 29.1 16 23.2 28.8 16 28.8zm7.2-9.8c-.4-.2-2.3-1.1-2.7-1.3-.4-.1-.6-.2-.9.2-.3.4-1 1.3-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1.1-2-2.4-2.2-2.8-.2-.4 0-.6.2-.8.2-.2.4-.4.5-.7.2-.2.2-.4.4-.6.1-.3 0-.5 0-.7-.1-.2-.9-2.1-1.2-2.9-.3-.7-.5-.6-.8-.6h-.7c-.2 0-.6.1-1 .5-.3.4-1.3 1.3-1.3 3.1s1.3 3.6 1.5 3.9c.2.3 2.6 4 6.3 5.6.9.4 1.6.6 2.1.8.9.3 1.7.2 2.3.1.7-.1 2.3-.9 2.6-1.8.3-.9.3-1.6.2-1.8-.1-.2-.3-.3-.7-.4z"/></svg>';
   function estimateLine(it){ return (it.price>0) ? it.price*it.qty : null; }   // estimation indicative
   function cartTotal(){ let sum=0, unknown=false; cart.forEach(it=>{ const l=estimateLine(it); if(l==null) unknown=true; else sum+=l; }); return {sum, unknown}; }
-  function updateCartButton(){
-    const btn=document.getElementById('cartBtn'); if(!btn) return;
-    btn.style.display = cart.length ? 'flex' : 'none';
-    const c=document.getElementById('cartCount'); if(c) c.textContent=cart.length;
+  function updateCartButton(bump){
+    const bar=document.getElementById('cartBar'); if(!bar) return;
+    const n=cart.length;
+    bar.hidden = !n; document.body.classList.toggle('has-cart', !!n);
+    const c=document.getElementById('cbCount'); if(c) c.textContent=n;
+    const t=document.getElementById('cbTotal'); if(t){ const {sum}=cartTotal(); t.textContent = sum>0 ? '~ '+eur(sum) : ''; }
+    if(bump && n && !reduceMotion){ bar.classList.remove('bump'); void bar.offsetWidth; bar.classList.add('bump'); }
   }
   updateCartButton();
 
@@ -639,33 +678,33 @@
       ${photoBlock}
       <h3 class="modal-title">${esc(p.name)}</h3>
       <div class="modal-sub"><span class="unit">${esc(p.unit||'')} · ${(p.price&&p.price>0)?eur(p.price):'Prix en magasin'}</span> <span class="badge ${s.badge}">${s.label}</span></div>
-      <p class="modal-intro">Ajoutez ce produit à votre réservation. Vous pourrez en ajouter d'autres avant de valider. Tout est mis de côté <b>pendant 1h</b>.</p>
-      <div class="modal-field"><label>Quantité souhaitée</label>
-        <input type="number" id="resQty" min="0.1" value="1" class="qty-solo">
+      <p class="modal-intro">Ajoutez ce produit à votre liste de courses. Vous validez la réservation à la fin, et tout est mis de côté <b>pendant 1h</b>.</p>
+      <div class="modal-field"><label for="resQty">Quantité souhaitée${isKg(p.unit)?' (en kg)':''}</label>
+        <input type="number" id="resQty" min="1" step="1" value="${inCart(p.id)?inCart(p.id).qty:1}" inputmode="numeric" class="qty-solo">
       </div>
       <div class="modal-err" id="resErr"></div>
-      <button class="btn modal-submit" onclick="addToCart()">Ajouter à ma réservation</button>
+      <button class="btn modal-submit" onclick="addToCart()">${inCart(p.id)?'Mettre à jour ma liste':'Ajouter à ma liste'}</button>
       ${epuise?'<p class="modal-note">Ce produit est actuellement épuisé : votre demande sera notée pour le réapprovisionnement.</p>':''}`;
     document.getElementById('reserveModal').classList.add('open');
     document.body.style.overflow='hidden';
   }
   function addToCart(){
     const p = reserveProduct; if(!p) return;
-    const qty = parseFloat(document.getElementById('resQty').value)||0;
+    const qty = parseInt(document.getElementById('resQty').value,10)||0;
     const err = document.getElementById('resErr');
-    if(qty<=0){ err.textContent='Indiquez une quantité valide.'; err.classList.add('show'); return; }
-    const ex = cart.find(it=>it.id===p.id);
-    if(ex) ex.qty += qty;
+    if(qty<1){ err.textContent='Indiquez une quantité d\'au moins 1.'; err.classList.add('show'); return; }
+    const ex = inCart(p.id);
+    if(ex) ex.qty = qty;   // la fiche fixe la quantité exacte
     else cart.push({ id:p.id, name:p.name, unit:p.unit, price:p.price, emoji:p.emoji, color:p.color, image_url:p.image_url, qty });
-    saveCart(); updateCartButton();
+    saveCart(); updateCartButton(true); refreshCtrl(p.id);
     document.getElementById('reserveBody').innerHTML = `
       <div class="modal-success">
         <div class="ok">✓</div>
-        <h3>Ajouté à votre réservation</h3>
-        <p><b>${esc(p.name)}</b> · Qté ${qty}</p>
+        <h3>Ajouté à votre liste</h3>
+        <p><b>${esc(p.name)}</b> · ${qtyLabel({unit:p.unit, qty})}</p>
         <div class="cart-confirm-actions">
-          <button class="btn ghost" onclick="closeReserve()">Continuer mes achats</button>
-          <button class="btn" onclick="closeReserve();openCart()">Voir ma réservation (${cart.length})</button>
+          <button class="btn ghost" onclick="closeReserve()">Continuer mes courses</button>
+          <button class="btn" onclick="closeReserve();openCart()">Voir ma liste (${cart.length})</button>
         </div>
       </div>`;
   }
@@ -680,47 +719,76 @@
   function closeZoom(){ document.getElementById('photoZoom').classList.remove('open'); }
   function openCart(){ renderCart(); document.getElementById('cartModal').classList.add('open'); document.body.style.overflow='hidden'; }
   function closeCart(){ document.getElementById('cartModal').classList.remove('open'); document.body.style.overflow=''; }
-  function changeQty(i,d){ if(!cart[i]) return; cart[i].qty+=d; if(cart[i].qty<=0) cart.splice(i,1); saveCart(); updateCartButton(); renderCart(); }
-  function removeItem(i){ cart.splice(i,1); saveCart(); updateCartButton(); renderCart(); }
+  function changeQty(i,d){ if(!cart[i]) return; const id=cart[i].id; cart[i].qty+=d; if(cart[i].qty<=0) cart.splice(i,1); saveCart(); updateCartButton(); renderCart(); refreshCtrl(id); }
+  function removeItem(i){ if(!cart[i]) return; const id=cart[i].id; cart.splice(i,1); saveCart(); updateCartButton(); renderCart(); refreshCtrl(id); }
   const pad2 = n => String(n).padStart(2,'0');
   function pickupSlots(){
     const slots=['Dès que possible'];
     for(let h=10; h<=18; h++) slots.push(pad2(h)+'h00');
     return slots;
   }
+  let chosenSlot = 'Dès que possible';
+  function pickSlot(v){ chosenSlot = v; }
   function renderCart(){
     const body=document.getElementById('cartBody'); if(!body) return;
-    if(!cart.length){ body.innerHTML='<p class="cart-empty">Votre réservation est vide.<br>Ajoutez des produits depuis le catalogue.</p>'; return; }
-    const items=cart.map((it,i)=>{
+    if(!cart.length){
+      body.innerHTML='<div class="cart-empty"><p>Votre liste est vide.</p><p>Appuyez sur + sous un produit pour l\'ajouter.</p><button type="button" class="btn" onclick="closeCart()">Parcourir les rayons</button></div>';
+      return;
+    }
+    const lines=cart.map((it,i)=>{
       const l=estimateLine(it);
-      return `<div class="cart-item">
-        <div class="cart-item-main"><b>${esc(it.name)}</b><span class="cart-item-meta">${it.price>0?eur(it.price)+' / '+esc(it.unit||'u'):'Prix en magasin'}</span></div>
-        <div class="cart-qty"><button type="button" onclick="changeQty(${i},-1)" aria-label="Moins">–</button><span>Qté ${it.qty}</span><button type="button" onclick="changeQty(${i},1)" aria-label="Plus">+</button></div>
-        <div class="cart-line">${l==null?'<span class="price-ask">prix magasin</span>':'~ '+eur(l)}</div>
-        <button class="cart-del" type="button" onclick="removeItem(${i})" aria-label="Retirer">✕</button>
-      </div>`;
+      const thumb = it.image_url ? `<img src="${esc(it.image_url)}" alt="" loading="lazy">` : `<span>${esc(it.emoji||'🛒')}</span>`;
+      return `<li class="rc-line">
+          <span class="rc-thumb">${thumb}</span>
+          <div class="rc-info">
+            <b>${esc(it.name)}</b>
+            <span>${it.price>0 ? eur(it.price)+(isKg(it.unit)?' le kg':' l\'unité') : 'Prix en magasin'}</span>
+            <div class="rc-step" role="group" aria-label="Quantité de ${esc(it.name)}">
+              <button type="button" onclick="changeQty(${i},-1)" aria-label="${it.qty===1?'Retirer de ma liste':'Un de moins'}">${it.qty===1?ICON.trash:ICON.minus}</button>
+              <span>${qtyLabel(it)}</span>
+              <button type="button" onclick="changeQty(${i},1)" aria-label="Un de plus">${ICON.plus}</button>
+            </div>
+          </div>
+          <span class="rc-amt">${l==null?'<em>en magasin</em>':eur(l)}</span>
+        </li>`;
     }).join('');
     const {sum,unknown}=cartTotal();
-    const pickups=pickupSlots().map(s=>`<option>${s}</option>`).join('');
+    const n=cart.reduce((a,it)=>a+it.qty,0);
+    const today=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+    const slots=pickupSlots().map(v=>`<label class="slot"><input type="radio" name="pickup" value="${v}" ${v===chosenSlot?'checked':''} onchange="pickSlot(this.value)"><span>${v}</span></label>`).join('');
     body.innerHTML = `
-      <div class="cart-list">${items}</div>
-      <div class="cart-total"><span>Total estimé</span><span>~ ${eur(sum)}</span></div>
-      <p class="cart-note">Estimation indicative. Les produits vendus au poids sont pesés en magasin, le prix final peut varier.${unknown?' Les produits « prix en magasin » ne sont pas comptés dans ce total.':''}</p>
-      <div class="modal-field"><label>Créneau de récupération</label><select id="cartPickup">${pickups}</select><small>Vos produits sont mis de côté <b>pendant 1h</b> à partir du créneau choisi.</small></div>
-      <div class="modal-field"><label>Votre nom</label><input type="text" id="cartName" placeholder="Ex : Awa Diallo"></div>
-      <div class="modal-field"><label>Votre numéro de téléphone</label><input type="tel" id="cartPhone" placeholder="XX XX XX XX XX"><small>Le magasin vous prévient en cas d'indisponibilité.</small></div>
-      <div class="modal-err" id="cartErr"></div>
-      <label class="modal-consent"><input type="checkbox" id="cartConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter au sujet de ma réservation. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="/politique-confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
-      <p class="modal-wa-note">📲 En validant, WhatsApp s'ouvre avec votre réservation déjà rédigée. Appuyez bien sur « Envoyer » pour qu'elle soit prise en compte.</p>
-      <button class="btn modal-submit btn-wa" onclick="sendCart()"><span class="wa-ico">${WA_SVG}</span> Réserver via WhatsApp</button>`;
+      <div class="receipt">
+        <div class="rc-head">
+          <strong>Gamme Market</strong>
+          <span>53 Rue Nationale, 49300 Cholet</span>
+          <span>Liste du ${today}</span>
+        </div>
+        <ul class="rc-lines">${lines}</ul>
+        <div class="rc-sub"><span>${n} article${n>1?'s':''} · ${cart.length} produit${cart.length>1?'s':''}</span></div>
+        <div class="rc-total"><span>Total estimé</span><strong>~ ${eur(sum)}</strong></div>
+        <p class="rc-note">Prix indicatif : les produits au poids sont pesés en magasin.${unknown?' Les produits « prix en magasin » ne sont pas comptés.':''}</p>
+      </div>
+      <div class="checkout">
+        <fieldset class="slots">
+          <legend>Créneau de retrait</legend>
+          <div class="slot-row">${slots}</div>
+          <small>Vos produits sont mis de côté <b>pendant 1h</b> à partir du créneau choisi.</small>
+        </fieldset>
+        <div class="modal-field"><label for="cartName">Votre nom</label><input type="text" id="cartName" autocomplete="name" placeholder="Ex : Awa Diallo"></div>
+        <div class="modal-field"><label for="cartPhone">Votre numéro de téléphone</label><input type="tel" id="cartPhone" autocomplete="tel" inputmode="tel" placeholder="XX XX XX XX XX"><small>Le magasin vous prévient en cas d'indisponibilité.</small></div>
+        <div class="modal-err" id="cartErr" role="alert"></div>
+        <label class="modal-consent"><input type="checkbox" id="cartConsent"><span>J'accepte que mon numéro soit utilisé uniquement par Gamme Market pour me contacter au sujet de ma réservation. Il n'est pas utilisé à d'autres fins, ni transmis à des tiers, et est supprimé une fois la réservation traitée. <a href="/politique-confidentialite" target="_blank" rel="noopener">Politique de confidentialité</a>.</span></label>
+        <button class="btn modal-submit btn-wa" onclick="sendCart()"><span class="wa-ico">${WA_SVG}</span> Envoyer ma réservation sur WhatsApp</button>
+        <p class="checkout-note">WhatsApp s'ouvre avec votre liste déjà rédigée : appuyez sur «&nbsp;Envoyer&nbsp;» pour que le magasin la reçoive.</p>
+      </div>`;
   }
   async function sendCart(){
     const name=(document.getElementById('cartName').value||'').trim();
     const phone=(document.getElementById('cartPhone').value||'').trim();
-    const pickup=document.getElementById('cartPickup').value;
+    const pickEl=document.querySelector('input[name="pickup"]:checked'); const pickup=pickEl?pickEl.value:chosenSlot;
     const consent=document.getElementById('cartConsent');
     const err=document.getElementById('cartErr');
-    if(!cart.length){ err.textContent='Votre réservation est vide.'; err.classList.add('show'); return; }
+    if(!cart.length){ err.textContent='Votre liste est vide.'; err.classList.add('show'); return; }
     if(!name){ err.textContent='Indiquez votre nom.'; err.classList.add('show'); return; }
     if(phone.replace(/\D/g,'').length<8){ err.textContent='Indiquez un numéro de téléphone valide.'; err.classList.add('show'); return; }
     if(!consent || !consent.checked){ err.textContent='Merci de cocher la case de consentement pour continuer.'; err.classList.add('show'); return; }
@@ -739,7 +807,7 @@
     const {sum,unknown}=cartTotal();
     if(!auto){
       let msg=`Bonjour Gamme Market 👋\nRéservation (mise de côté 1h) :\n`;
-      cart.forEach(it=>{ const l=estimateLine(it); msg+=`• ${it.name} · Qté ${it.qty}${l!=null?` (~${eur(l)})`:''}\n`; });
+      cart.forEach(it=>{ const l=estimateLine(it); msg+=`• ${it.name} · ${isKg(it.unit)?qtyLabel(it):'Qté '+it.qty}${l!=null?` (~${eur(l)})`:''}\n`; });
       msg+=`\nTotal estimé : ~${eur(sum)}${unknown?' (hors produits au prix magasin)':''}\n`;
       msg+=`Récupération : ${pickup}\nNom : ${name}\nNuméro : ${phone}`;
       window.open('https://wa.me/'+WHATSAPP_GERANT+'?text='+encodeURIComponent(msg), '_blank');
@@ -748,18 +816,18 @@
     document.getElementById('cartBody').innerHTML = auto
       ? `<div class="modal-success">
           <div class="ok">✓</div>
-          <h3>Merci ${name} !</h3>
-          <p>Votre réservation a été transmise au magasin. Vos produits sont mis de côté <b>pendant 1h</b> (${pickup}). Le magasin vous recontacte au <b>${phone}</b> en cas d'indisponibilité.</p>
+          <h3>Merci ${esc(name)} !</h3>
+          <p>Votre réservation a été transmise au magasin. Vos produits sont mis de côté <b>pendant 1h</b> (${esc(pickup)}). Le magasin vous recontacte au <b>${esc(phone)}</b> en cas d'indisponibilité.</p>
           <button class="btn" onclick="closeCart()">Parfait, merci</button>
         </div>`
       : `<div class="modal-success">
           <div class="ok ok-wa"><span class="wa-ico">${WA_SVG}</span></div>
-          <h3>Plus qu'une étape, ${name} !</h3>
+          <h3>Plus qu'une étape, ${esc(name)} !</h3>
           <p>WhatsApp vient de s'ouvrir avec votre réservation. <b>Appuyez bien sur « Envoyer »</b> : sans cette validation, le magasin ne la reçoit pas.</p>
           <p class="modal-call">Un doute ? Appelez le magasin au <a href="tel:+33784576065">07 84 57 60 65</a>.</p>
           <button class="btn" onclick="closeCart()">C'est envoyé, merci !</button>
         </div>`;
-    cart=[]; saveCart(); updateCartButton();
+    cart=[]; chosenSlot='Dès que possible'; saveCart(); updateCartButton(); refreshAllCtrls();
   }
 
   // Bouton "retour en haut" + ombre du menu collant au défilement
