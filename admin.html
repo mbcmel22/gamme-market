@@ -88,7 +88,10 @@
           <h3>🕒 Horaires du magasin</h3>
           <p class="svc-admin-sub">Ces horaires pilotent le badge « Ouvert / Fermé » et la liste des horaires affichée sur le site.</p>
           <div class="hours-editor">
-            <div class="hours-row"><span class="hours-lbl">Lundi – Samedi</span><input type="time" id="whOpen"><span class="hours-sep">→</span><input type="time" id="whClose"></div>
+            <div class="hours-row"><span class="hours-lbl">Lundi au samedi</span><input type="time" id="whOpen" aria-label="Ouverture du lundi au samedi"><span class="hours-sep">→</span><input type="time" id="whClose" aria-label="Fermeture du lundi au samedi"></div>
+            <div class="hours-row"><label class="hours-closed"><input type="checkbox" id="whPauseOn" onchange="togglePauseRow()"> Pause déjeuner (magasin fermé)</label></div>
+            <div class="hours-row" id="pauseRow"><span class="hours-lbl">Pause</span><input type="time" id="whPauseStart" aria-label="Début de la pause"><span class="hours-sep">→</span><input type="time" id="whPauseEnd" aria-label="Fin de la pause"></div>
+            <div class="hours-err" id="hoursErr" role="alert"></div>
             <div class="hours-row"><label class="hours-closed"><input type="checkbox" id="sunClosed" onchange="document.getElementById('sunRow').style.opacity=this.checked?.4:1"> Fermé le dimanche</label></div>
             <div class="hours-row" id="sunRow"><span class="hours-lbl">Dimanche</span><input type="time" id="suOpen"><span class="hours-sep">→</span><input type="time" id="suClose"></div>
             <button class="btn" onclick="saveStoreHours()">Enregistrer les horaires du magasin</button>
@@ -96,7 +99,7 @@
         </div>
         <div class="svc-admin" style="margin-top:20px">
           <h3>💱 Horaires des services (MoneyGram, RIA)</h3>
-          <p class="svc-admin-sub">Texte affiché sous chaque service sur le site. Exemple : « Lun–Sam : 10h–18h · Dimanche fermé ».</p>
+          <p class="svc-admin-sub">Texte affiché sous chaque service sur le site. Exemple : « Lun-Sam : 10h-18h · Dimanche fermé ».</p>
           <div id="svcHoursAdmin"><div class="loading">Chargement…</div></div>
         </div>
       </div><!-- /tab-horaires -->
@@ -161,7 +164,7 @@
       </div><!-- /tab-apparence -->
 
       <div class="tab-pane" id="tab-produits">
-      <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>–</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
+      <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>−</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
 
       <details class="import-box">
         <summary>📥 Importer des produits (depuis Google Sheets / Excel)</summary>
@@ -399,7 +402,7 @@
   }
 
   /* ---------- HORAIRES (magasin + services) ---------- */
-  let storeHours = { weekday:{open:"10:00",close:"19:30"}, sunday:{open:"10:00",close:"14:00",closed:false} };
+  let storeHours = { weekday:{open:"10:00",close:"19:00",pause:{start:"14:00",end:"15:00"}}, sunday:{open:"10:00",close:"14:00",closed:false} };
   const t5 = s => (s||'').slice(0,5);
   async function loadHours(){
     try {
@@ -415,12 +418,32 @@
     set('suOpen', t5(s.open)); set('suClose', t5(s.close));
     const cb = document.getElementById('sunClosed'); if(cb) cb.checked = !!s.closed;
     const row = document.getElementById('sunRow'); if(row) row.style.opacity = s.closed ? .4 : 1;
+    const p = w.pause || null;
+    document.getElementById('whPauseOn').checked = !!p;
+    set('whPauseStart', t5(p ? p.start : '14:00')); set('whPauseEnd', t5(p ? p.end : '15:00'));
+    togglePauseRow();
+  }
+  function togglePauseRow(){
+    const on = document.getElementById('whPauseOn').checked;
+    const row = document.getElementById('pauseRow'); if(row) row.style.opacity = on ? 1 : .4;
+    ['whPauseStart','whPauseEnd'].forEach(id=>{ const el=document.getElementById(id); if(el) el.disabled = !on; });
   }
   async function saveStoreHours(){
-    const val = {
-      weekday:{ open:document.getElementById('whOpen').value||'10:00', close:document.getElementById('whClose').value||'19:30' },
-      sunday:{ open:document.getElementById('suOpen').value||'10:00', close:document.getElementById('suClose').value||'14:00', closed:document.getElementById('sunClosed').checked }
-    };
+    const v = id => document.getElementById(id).value;
+    const err = document.getElementById('hoursErr');
+    const fail = msg => { err.textContent = msg; err.classList.add('show'); };
+    err.classList.remove('show');
+    const weekday = { open: v('whOpen')||'10:00', close: v('whClose')||'19:00' };
+    if(weekday.open >= weekday.close) return fail("Du lundi au samedi : l'heure de fermeture doit être après l'heure d'ouverture.");
+    if(document.getElementById('whPauseOn').checked){
+      const start = v('whPauseStart'), end = v('whPauseEnd');
+      if(!start || !end || start >= end) return fail("Pause déjeuner : la fin de la pause doit être après son début.");
+      if(start <= weekday.open || end >= weekday.close) return fail("Pause déjeuner : elle doit se situer entre l'ouverture et la fermeture.");
+      weekday.pause = { start, end };
+    }
+    const sunday = { open: v('suOpen')||'10:00', close: v('suClose')||'14:00', closed: document.getElementById('sunClosed').checked };
+    if(!sunday.closed && sunday.open >= sunday.close) return fail("Dimanche : l'heure de fermeture doit être après l'heure d'ouverture.");
+    const val = { weekday, sunday };
     storeHours = val;
     const { error } = await sb.from('settings').upsert({ key:'store_hours', value: JSON.stringify(val) });
     if(error){ alert('Erreur : '+error.message); } else { toast(); }
@@ -431,7 +454,7 @@
     box.innerHTML = svcList.map(s=>`
       <div class="hours-svc-row">
         <b>${s.name}</b>
-        <input type="text" data-svc="${s.id}" value="${esc(s.hours||'')}" placeholder="Lun–Sam : 10h–18h · Dimanche fermé">
+        <input type="text" data-svc="${s.id}" value="${esc(s.hours||'')}" placeholder="Lun-Sam : 10h-18h · Dimanche fermé">
         <button class="btn ghost" onclick="saveSvcHours('${s.id}')">Enregistrer</button>
       </div>`).join('');
   }
@@ -553,7 +576,7 @@
           </div></div>
         <div class="colhide"><div class="edit-price"><input type="number" step="0.10" min="0" value="${p.price||0}" onchange="setPrice(${p.id}, this.value)" aria-label="Prix">€</div></div>
         <div class="qtybox">
-          <button onclick="changeQty(${p.id},-1)">–</button>
+          <button onclick="changeQty(${p.id},-1)" aria-label="Un de moins">−</button>
           <input type="number" value="${p.qty}" min="0" onchange="setQty(${p.id},this.value)">
           <button onclick="changeQty(${p.id},1)">+</button>
         </div>

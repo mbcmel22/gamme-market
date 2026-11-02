@@ -48,8 +48,10 @@
   "areaServed":{"@type":"City","name":"Cholet"},
   "keywords":"épicerie africaine Cholet, épicerie exotique, épicerie choletaise, épicerie place Travot, produits africains, MoneyGram, RIA",
   "openingHoursSpecification":[
-    {"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"opens":"09:00","closes":"20:00"},
-    {"@type":"OpeningHoursSpecification","dayOfWeek":"Sunday","opens":"09:00","closes":"13:00"}]
+    {"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"opens":"10:00","closes":"14:00"},
+    {"@type":"OpeningHoursSpecification","dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"opens":"15:00","closes":"19:00"},
+    {"@type":"OpeningHoursSpecification","dayOfWeek":"Sunday","opens":"10:00","closes":"14:00"}],
+  "sameAs":["https://www.tiktok.com/@gammemarketcholet"]
 }
 </script>
 
@@ -120,9 +122,9 @@
       <div class="card">
         <h3>Informations</h3>
         <div class="infoline"><div><a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=GAMME+MARKET+53+Rue+Nationale+Cholet&amp;query_place_id=ChIJwbcaU9lHBkgRLHBU6aq6bSQ" target="_blank" rel="noopener"><b>53 Rue Nationale</b><span>49300 Cholet · Itinéraire ↗</span></a></div></div>
-        <div class="infoline"><div id="heroHours"><b>Lun–Sam : 10h–19h30</b><span>Dimanche : 10h–14h</span></div></div>
+        <div class="infoline"><div id="heroHours"><b>Lun au sam : 10h-14h, 15h-19h</b><span>Dimanche : 10h-14h</span></div></div>
         <div class="infoline"><div><a href="tel:+33784576065"><b>07 84 57 60 65</b></a><span>Appelez-nous</span></div></div>
-        <div class="infoline"><div id="heroTransfer"><b>MoneyGram &amp; RIA disponibles</b><span>Transfert d'argent · Lun–Sam : 10h–18h · Dimanche fermé</span></div></div>
+        <div class="infoline"><div id="heroTransfer"><b>MoneyGram &amp; RIA disponibles</b><span>Transfert d'argent · Lun-Sam : 10h-18h · Dimanche fermé</span></div></div>
       </div>
     </div>
   </section>
@@ -200,13 +202,13 @@
         <div class="pcard">
           <h3>Horaires d'ouverture</h3>
           <ul class="hours" id="hoursList">
-            <li><span>Lundi</span><span>10h00 – 19h30</span></li>
-            <li><span>Mardi</span><span>10h00 – 19h30</span></li>
-            <li><span>Mercredi</span><span>10h00 – 19h30</span></li>
-            <li><span>Jeudi</span><span>10h00 – 19h30</span></li>
-            <li><span>Vendredi</span><span>10h00 – 19h30</span></li>
-            <li><span>Samedi</span><span>10h00 – 19h30</span></li>
-            <li><span>Dimanche</span><span>10h00 – 14h00</span></li>
+            <li><span>Lundi</span><span class="rng"><span>10h00 - 14h00</span><span>15h00 - 19h00</span></span></li>
+            <li><span>Mardi</span><span class="rng"><span>10h00 - 14h00</span><span>15h00 - 19h00</span></span></li>
+            <li><span>Mercredi</span><span class="rng"><span>10h00 - 14h00</span><span>15h00 - 19h00</span></span></li>
+            <li><span>Jeudi</span><span class="rng"><span>10h00 - 14h00</span><span>15h00 - 19h00</span></span></li>
+            <li><span>Vendredi</span><span class="rng"><span>10h00 - 14h00</span><span>15h00 - 19h00</span></span></li>
+            <li><span>Samedi</span><span class="rng"><span>10h00 - 14h00</span><span>15h00 - 19h00</span></span></li>
+            <li><span>Dimanche</span><span class="rng"><span>10h00 - 14h00</span></span></li>
           </ul>
         </div>
         <div class="pcard">
@@ -243,6 +245,10 @@
         <div>
           <a href="#" class="logo footer-logo" style="margin-bottom:14px" aria-label="Gamme Market"><img src="logo-paysage.webp" alt="Gamme Market" onerror="this.style.display='none'"></a>
           <p>Votre épicerie africaine et exotique à Cholet, près de la place Travot. Produits authentiques, services de proximité et accueil chaleureux.</p>
+          <a class="social" href="https://www.tiktok.com/@gammemarketcholet" target="_blank" rel="noopener" aria-label="Suivre Gamme Market sur TikTok (nouvel onglet)">
+            <span class="social-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M10 8.6v6.8l5.6-3.4z" fill="currentColor" stroke="none"/></svg></span>
+            <span class="social-txt"><b>Suivez-nous sur TikTok</b><small>@gammemarketcholet</small></span>
+          </a>
         </div>
         <div>
           <h4>Navigation</h4>
@@ -534,8 +540,8 @@
     ria:"Transfert d'argent international rapide et sécurisé avec RIA, directement à votre épicerie."
   };
   let servicesData = [
-    {id:'moneygram', name:'MoneyGram', available:true, hours:'Lun–Sam : 10h–18h · Dimanche fermé'},
-    {id:'ria', name:'RIA', available:true, hours:'Lun–Sam : 10h–18h · Dimanche fermé'}
+    {id:'moneygram', name:'MoneyGram', available:true, hours:'Lun-Sam : 10h-18h · Dimanche fermé'},
+    {id:'ria', name:'RIA', available:true, hours:'Lun-Sam : 10h-18h · Dimanche fermé'}
   ];
 
   async function loadServices(){
@@ -569,7 +575,7 @@
     const el = document.getElementById('heroTransfer'); if(!el) return;
     const avail = servicesData.filter(s=>s.available).map(s=>s.name);
     if(avail.length){
-      const sh = (servicesData.find(s=>s.available)||{}).hours || 'Lun–Sam : 10h–18h · Dimanche fermé';
+      const sh = (servicesData.find(s=>s.available)||{}).hours || 'Lun-Sam : 10h-18h · Dimanche fermé';
       el.innerHTML = `<b>${avail.join(' & ')} disponible${avail.length>1?'s':''}</b><span>Transfert d'argent · ${sh}</span>`;
     } else {
       el.innerHTML = `<b>Transferts momentanément indisponibles</b><span>MoneyGram / RIA</span>`;
@@ -577,55 +583,60 @@
   }
 
   // ===== Horaires du magasin (modifiables depuis le back-office) =====
-  // getDay() : 0 = dimanche. Valeurs par défaut = horaires réels actuels.
+  // getDay() : 0 = dimanche. Valeurs par défaut = horaires de la fiche Google.
   let STORE_HOURS = {
-    weekday:{ open:"10:00", close:"19:30" },
+    weekday:{ open:"10:00", close:"19:00", pause:{ start:"14:00", end:"15:00" } },
     sunday: { open:"10:00", close:"14:00", closed:false }
   };
   const DAY_NAMES = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
   const hm = str => { const [h,m] = (str||'0:0').split(':').map(Number); return h*60 + (m||0); };
-  const fmtH  = str => { const [h,m] = (str||'').split(':'); return (m && m!=='00') ? `${+h}h${m}` : `${+h}h`; };
-  const fmtHM = str => { const [h,m] = (str||'').split(':'); return `${+h}h${m||'00'}`; };
+  const fmtMin = (m, long) => { const h = Math.floor(m/60), mm = String(m%60).padStart(2,'0'); return (long || mm!=='00') ? `${h}h${mm}` : `${h}h`; };
   function dayCfg(day){ if(day===0){ return STORE_HOURS.sunday.closed ? null : STORE_HOURS.sunday; } return STORE_HOURS.weekday; }
+  // Plages d'une journée en minutes : [[ouverture, début de pause], [fin de pause, fermeture]] ou [[ouverture, fermeture]]
+  function ranges(cfg){
+    if(!cfg) return [];
+    const o = hm(cfg.open), c = hm(cfg.close), p = cfg.pause;
+    if(p && p.start && p.end){ const ps = hm(p.start), pe = hm(p.end); if(o < ps && ps < pe && pe < c) return [[o,ps],[pe,c]]; }
+    return o < c ? [[o,c]] : [];
+  }
+  function rangesTxt(cfg, sep){ const r = ranges(cfg); return r.length ? r.map(([a,b])=>`${fmtMin(a)}-${fmtMin(b)}`).join(sep) : 'fermé'; }
   function nextOpen(day){
-    for(let i=1;i<=7;i++){ const d=(day+i)%7; const c=dayCfg(d); if(c) return { when: i===1?'demain':DAY_NAMES[d], open:c.open }; }
+    for(let i=1;i<=7;i++){ const d=(day+i)%7; const r=ranges(dayCfg(d)); if(r.length) return { when: i===1?'demain':DAY_NAMES[d], at:r[0][0] }; }
     return null;
   }
   function fmtDur(m){ if(m<60) return m+' min'; const h=Math.floor(m/60), mm=m%60; return mm? `${h} h ${mm}` : `${h} h`; }
   function updateOpenPill(){
     const el = document.getElementById('openPill'); if(!el) return;
-    const now = new Date(); const day = now.getDay(); const cfg = dayCfg(day);
+    const now = new Date(), day = now.getDay(), r = ranges(dayCfg(day));
     const mins = now.getHours()*60 + now.getMinutes();
+    const cur = r.findIndex(([a,b])=> mins>=a && mins<b);
+    const nxt = r.find(([a])=> a>mins);
     let cls = 'openpill', txt = '';
-    const closedTxt = () => { const n = nextOpen(day); cls += ' closed'; return n ? `Fermé · ouvre ${n.when} à ${fmtH(n.open)}` : 'Fermé'; };
-    if(!cfg){ txt = closedTxt(); }
-    else {
-      const open = hm(cfg.open), close = hm(cfg.close);
-      if(mins < open){
-        const diff = open - mins;
-        if(diff <= 60){ cls += ' soon'; txt = `Ouvre dans ${fmtDur(diff)}`; }
-        else { cls += ' closed'; txt = `Fermé · ouvre à ${fmtH(cfg.open)}`; }
-      } else if(mins < close){
-        const diff = close - mins;
-        if(diff <= 60){ cls += ' soon'; txt = `Ferme dans ${fmtDur(diff)}`; }
-        else { txt = `Ouvert · ferme à ${fmtH(cfg.close)}`; }
-      } else { txt = closedTxt(); }
+    if(cur >= 0){
+      const end = r[cur][1], left = end - mins, beforePause = cur < r.length-1;
+      if(left <= 60){ cls += ' soon'; txt = beforePause ? `Pause déjeuner dans ${fmtDur(left)}` : `Ferme dans ${fmtDur(left)}`; }
+      else { txt = beforePause ? `Ouvert · pause à ${fmtMin(end)}` : `Ouvert · ferme à ${fmtMin(end)}`; }
+    } else if(nxt){
+      const wait = nxt[0] - mins, inPause = r[0][0] < mins;
+      if(inPause){ cls += ' soon'; txt = `Pause déjeuner · rouvre à ${fmtMin(nxt[0])}`; }
+      else if(wait <= 60){ cls += ' soon'; txt = `Ouvre dans ${fmtDur(wait)}`; }
+      else { cls += ' closed'; txt = `Fermé · ouvre à ${fmtMin(nxt[0])}`; }
+    } else {
+      const n = nextOpen(day); cls += ' closed'; txt = n ? `Fermé · ouvre ${n.when} à ${fmtMin(n.at)}` : 'Fermé';
     }
     el.className = cls; el.textContent = txt;
   }
   function applyStoreHours(){
-    const w = STORE_HOURS.weekday, s = STORE_HOURS.sunday;
-    const heroW = `${fmtH(w.open)}–${fmtH(w.close)}`;
-    const heroS = s.closed ? 'Fermé' : `${fmtH(s.open)}–${fmtH(s.close)}`;
     const hero = document.getElementById('heroHours');
-    if(hero) hero.innerHTML = `<b>Lun–Sam : ${heroW}</b><span>Dimanche : ${heroS}</span>`;
+    if(hero) hero.innerHTML = `<b>Lun au sam : ${rangesTxt(dayCfg(1), ', ')}</b><span>Dimanche : ${rangesTxt(dayCfg(0), ', ')}</span>`;
     const list = document.getElementById('hoursList');
     if(list){
-      const wtxt = `${fmtHM(w.open)} – ${fmtHM(w.close)}`;
-      const stxt = s.closed ? 'Fermé' : `${fmtHM(s.open)} – ${fmtHM(s.close)}`;
-      const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-      list.innerHTML = jours.map(j=>`<li><span>${j}</span><span>${wtxt}</span></li>`).join('')
-        + `<li><span>Dimanche</span><span>${stxt}</span></li>`;
+      const today = new Date().getDay();
+      list.innerHTML = [1,2,3,4,5,6,0].map(d=>{
+        const r = ranges(dayCfg(d)), name = DAY_NAMES[d].charAt(0).toUpperCase() + DAY_NAMES[d].slice(1);
+        const val = r.length ? r.map(([a,b])=>`<span>${fmtMin(a,true)} - ${fmtMin(b,true)}</span>`).join('') : '<span>Fermé</span>';
+        return `<li${d===today?' class="is-today"':''}><span>${name}${d===today?'<em>aujourd’hui</em>':''}</span><span class="rng">${val}</span></li>`;
+      }).join('');
     }
     updateOpenPill();
   }
@@ -724,7 +735,11 @@
   const pad2 = n => String(n).padStart(2,'0');
   function pickupSlots(){
     const slots=['Dès que possible'];
-    for(let h=10; h<=18; h++) slots.push(pad2(h)+'h00');
+    const r = ranges(dayCfg(1));   // horaires du lundi au samedi : un créneau par heure, hors pause déjeuner
+    if(!r.length) return slots;
+    for(let h=Math.ceil(r[0][0]/60); h<=Math.floor(r[r.length-1][1]/60)-1; h++){
+      const t = h*60; if(r.some(([a,b])=> t>=a && t+60<=b)) slots.push(pad2(h)+'h00');
+    }
     return slots;
   }
   let chosenSlot = 'Dès que possible';
