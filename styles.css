@@ -753,3 +753,17 @@ footer a.social:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 /* Liens légaux du pied de page sur une seule ligne */
 footer .copyright a{display:inline;padding:0}
+
+/* ===== Back office : ajout direct d'un produit ===== */
+.add-box>summary{color:#1B5E20}
+.add-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 16px}
+.add-f{display:flex;flex-direction:column;gap:6px;font-size:.86rem;font-weight:700;color:#3a352d}
+.add-f[hidden]{display:none}
+.add-f em{font-style:normal;color:#b3261e}
+.add-f input,.add-f select{border:1px solid #d9d2c4;border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.95rem;font-weight:500;background:#fff;color:#2A1E16;width:100%}
+.add-f input:focus,.add-f select:focus{outline:none;border-color:#1B5E20;box-shadow:0 0 0 3px rgba(27,94,32,.12)}
+.add-f input[type=file]{padding:8px;font-size:.88rem}
+.add-wide{grid-column:span 2}
+.add-hint{font-size:.82rem;color:var(--muted);align-self:center}
+@media(max-width:820px){.add-grid{grid-template-columns:1fr 1fr}.add-wide{grid-column:1/-1}}
+@media(max-width:520px){.add-grid{grid-template-columns:1fr}}

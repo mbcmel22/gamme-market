@@ -166,10 +166,37 @@
       <div class="tab-pane" id="tab-produits">
       <div class="bo-hint"><span>💡</span><span>Ajustez la quantité avec les boutons <b>−</b>/<b>+</b> : l'étiquette de disponibilité et le site public se mettent à jour automatiquement. « Masquer » retire temporairement un produit du site sans le supprimer.</span></div>
 
+      <details class="import-box add-box" id="addBox" open>
+        <summary>➕ Ajouter un produit</summary>
+        <form class="import-inner add-form" id="addForm" onsubmit="addProduct(); return false;" novalidate>
+          <div class="add-grid">
+            <label class="add-f add-wide"><span>Nom du produit <em>*</em></span>
+              <input type="text" id="addName" placeholder="Ex : Fonio précuit (Mali) 1 kg" autocomplete="off" required></label>
+            <label class="add-f"><span>Catégorie <em>*</em></span>
+              <select id="addCat" onchange="toggleNewCat()"></select></label>
+            <label class="add-f" id="addCatNewWrap" hidden><span>Nouvelle catégorie</span>
+              <input type="text" id="addCatNew" placeholder="Ex : Riz &amp; céréales" autocomplete="off"></label>
+            <label class="add-f"><span>Prix (€)</span>
+              <input type="text" id="addPrice" inputmode="decimal" placeholder="Ex : 4,20"></label>
+            <label class="add-f"><span>Unité de vente</span>
+              <select id="addUnit"></select></label>
+            <label class="add-f"><span>Quantité en stock</span>
+              <input type="number" id="addQty" min="0" step="1" value="10" inputmode="numeric"></label>
+            <label class="add-f add-wide"><span>Photo (facultatif)</span>
+              <input type="file" id="addPhoto" accept="image/*"></label>
+          </div>
+          <div class="import-actions">
+            <button class="btn" id="addBtn" type="submit">Ajouter le produit</button>
+            <span class="add-hint">Le produit apparaît aussitôt sur le site. Prix, unité et photo restent modifiables ensuite dans la liste.</span>
+          </div>
+          <div class="import-msg" id="addMsg" role="status"></div>
+        </form>
+      </details>
+
       <details class="import-box">
-        <summary>📥 Importer des produits (depuis Google Sheets / Excel)</summary>
+        <summary>📥 Importer plusieurs produits (depuis Google Sheets / Excel)</summary>
         <div class="import-inner">
-          <p class="svc-admin-sub">Dans votre tableau, gardez une <b>ligne d'en-tête</b> avec ces colonnes : <b>Catégorie · Marque · Nom du produit · Conditionnement · Prix · Unité · Quantité</b>. Sélectionnez les cellules (en-tête compris), copiez-les (Ctrl+C), puis collez-les ci-dessous. La <b>marque</b> et le <b>conditionnement</b> sont automatiquement intégrés au nom du produit pour le référencement.</p>
+          <p class="svc-admin-sub">Copiez les lignes de votre tableau (Ctrl+C) et collez-les ci-dessous. Avec une <b>ligne d'en-tête</b> (Catégorie · Marque · Nom du produit · Conditionnement · Prix · Unité · Quantité), les colonnes sont reconnues par leur nom. Sans en-tête, vous pouvez aussi écrire une ligne par produit en séparant les infos par des « · », en commençant par la catégorie : <i>Épicerie · Feuilles de moringa · 100 g · Sachet · 3,50€ · 10</i>. La <b>marque</b> et le <b>conditionnement</b> sont automatiquement intégrés au nom du produit pour le référencement.</p>
           <textarea id="importArea" placeholder="Collez ici les lignes copiées depuis Google Sheets…"></textarea>
           <div class="import-actions">
             <button class="btn ghost" onclick="previewImport()">👁️ Aperçu</button>
@@ -369,7 +396,7 @@
   async function loadProducts(){
     const { data, error } = await sb.from('products').select('*').order('sort_order',{ascending:true});
     if(error){ document.getElementById('boTable').innerHTML='<div class="loading">⚠️ Erreur de chargement. Vérifie config.js.</div>'; console.error(error); return; }
-    products = data||[]; fillCatFilter(); renderBO();
+    products = data||[]; fillCatFilter(); renderBO(); fillAddForm();
   }
   function fillCatFilter(){
     const sel = document.getElementById('boCat'); if(!sel) return;
@@ -720,6 +747,56 @@
     URL.revokeObjectURL(a.href);
   }
 
+
+  /* ---------- Ajout direct d'un produit ---------- */
+  function fillAddForm(){
+    const cat = document.getElementById('addCat'); if(!cat) return;
+    const cur = cat.value;
+    const list = [...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'fr'));
+    cat.innerHTML = `<option value="">Choisir une catégorie</option>` + list.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('') + `<option value="__new__">➕ Nouvelle catégorie…</option>`;
+    if(cur && [...cat.options].some(o=>o.value===cur)) cat.value = cur;
+    const unit = document.getElementById('addUnit');
+    if(unit && !unit.options.length){ unit.innerHTML = UNIT_OPTIONS.map(u=>`<option value="${esc(u)}">${esc(u)}</option>`).join(''); }
+    toggleNewCat();
+  }
+  function toggleNewCat(){
+    const isNew = document.getElementById('addCat').value === '__new__';
+    document.getElementById('addCatNewWrap').hidden = !isNew;
+    if(isNew) document.getElementById('addCatNew').focus();
+  }
+  async function addProduct(){
+    const $ = id => document.getElementById(id);
+    const msg = $('addMsg'), btn = $('addBtn');
+    const say = (t, ok) => { msg.textContent = t; msg.className = 'import-msg ' + (ok ? 'ok' : 'err'); };
+    const name = $('addName').value.replace(/\s+/g,' ').trim();
+    let category = $('addCat').value; if(category === '__new__') category = $('addCatNew').value.replace(/\s+/g,' ').trim();
+    const priceRaw = $('addPrice').value.trim().replace(',','.').replace(/[^0-9.]/g,'');
+    const price = priceRaw ? parseFloat(priceRaw) : 0;
+    const qty = $('addQty').value === '' ? 0 : parseInt($('addQty').value, 10);
+    const unit = $('addUnit').value || 'À la pièce';
+    if(!name){ say('Indiquez le nom du produit.'); $('addName').focus(); return; }
+    if(!category){ say('Choisissez une catégorie (ou créez-en une).'); $('addCat').focus(); return; }
+    if(!(price >= 0) || Number.isNaN(price)){ say('Le prix doit être un nombre, par exemple 4,20.'); $('addPrice').focus(); return; }
+    if(!(qty >= 0)){ say('La quantité doit être un nombre entier positif.'); $('addQty').focus(); return; }
+    const twin = products.find(p => impSquash(p.name) === impSquash(name));
+    if(twin && !confirm(`Un produit « ${twin.name} » existe déjà. L'ajouter quand même ?`)) return;
+    btn.disabled = true; btn.textContent = 'Ajout…';
+    const sort_order = products.reduce((m,p)=>Math.max(m, p.sort_order||0), 0) + 1;
+    const { data, error } = await sb.from('products')
+      .insert({ name, category, price: Math.round(price*100)/100, unit, qty, visible:true, color:'#EFE2CC', sort_order })
+      .select().single();
+    btn.disabled = false; btn.textContent = 'Ajouter le produit';
+    if(error){ say("Le produit n'a pas été ajouté : " + error.message); return; }
+    products.push(data); fillCatFilter(); renderBO(); fillAddForm();
+    const photo = $('addPhoto');
+    if(photo.files && photo.files[0]) await uploadPhoto(data.id, photo);
+    // On garde la catégorie et l'unité pour enchaîner les ajouts du même rayon
+    $('addName').value = ''; $('addPrice').value = ''; $('addQty').value = '10'; $('addCatNew').value = '';
+    if($('addCat').value === '__new__'){ $('addCat').value = category; toggleNewCat(); }
+    say(`« ${name} » est ajouté et visible sur le site.`, true); toast();
+    $('addName').focus();
+  }
+
   /* ---------- Import de produits (copier-coller Google Sheets) ---------- */
   function impNorm(s){ return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
   function impSquash(s){ return impNorm(s).replace(/[^a-z0-9]/g,''); }
@@ -730,9 +807,46 @@
     if(cd && !impSquash(name).includes(impSquash(cd))) name = name + ' ' + cd;
     return name.replace(/\s+/g,' ').trim();
   }
+  const HEAD_WORDS = ['categorie','category','rayon','marque','brand','nom','nomduproduit','produit','designation','nomcomplet','name','conditionnement','format','formatpoids','poids','prix','prixunit','prixunitaire','price','unite','unitedevente','unit','quantite','qty','qte','stock'];
+  const UNIT_WORDS = [...UNIT_OPTIONS, 'Pièce','Pot','Boîte','Bouteille','Paquet','Carton','Barquette'].map(u=>impSquash(u));
+  function splitLine(l){
+    if(l.includes('\t')) return l.split('\t');
+    if(l.includes('·')) return l.split(/\s*·\s*/);
+    if(l.includes(';')) return l.split(';');
+    return null;
+  }
+  // Ligne sans en-tête : on reconnaît chaque info par sa forme (prix, quantité, unité, poids)
+  function guessRow(parts){
+    const c = parts.map(x=>(x||'').trim()).filter(Boolean);
+    if(c.length < 2) return null;
+    const category = c.shift();
+    const take = test => { const i = c.findIndex(test); return i < 0 ? '' : c.splice(i,1)[0]; };
+    let qty = ''; for(let i=c.length-1;i>=0;i--){ if(/^\d+$/.test(c[i])){ qty = c.splice(i,1)[0]; break; } }
+    const prix = take(x=>/€/.test(x) || /^\d+[.,]\d{1,2}$/.test(x));
+    const unit = take(x=>UNIT_WORDS.includes(impSquash(x)));
+    const cond = take(x=>/^\d+([.,]\d+)?\s?(g|gr|grs|kg|mg|ml|cl|l)$/i.test(x));
+    if(!c.length) return null;
+    return { category, nom: c.join(' '), cond, prix, unit, qty };
+  }
+  function toProduct(r){
+    const name = composeName(r.marque, r.nom, r.cond);
+    const priceRaw = (r.prix||'').replace(',','.').replace(/[^0-9.]/g,'');
+    const qtyRaw = (r.qty||'').replace(/[^0-9]/g,'');
+    return { name, category: r.category || 'Divers', price: priceRaw ? Math.max(0, parseFloat(priceRaw)||0) : 0,
+             unit: r.unit || 'À la pièce', qty: qtyRaw ? parseInt(qtyRaw,10) : 0, visible:true, color:'#EFE2CC' };
+  }
   function parseImport(text){
     const lines = (text||'').replace(/\r/g,'').split('\n').filter(l=>l.trim()!=='');
-    if(lines.length < 2) return { error:"Collez au moins une ligne d'en-tête + une ligne de produit." };
+    if(!lines.length) return { error:"Collez au moins une ligne de produit." };
+    const first = (splitLine(lines[0]) || lines[0].split(',')).map(impSquash);
+    const hasHeader = first.filter(h=>HEAD_WORDS.includes(h)).length >= 2;
+    if(!hasHeader){
+      const rows = [], bad = [];
+      lines.forEach((l,i)=>{ const parts = splitLine(l); const g = parts && guessRow(parts); if(g) rows.push(toProduct(g)); else bad.push(i+1); });
+      if(!rows.length) return { error:"Lignes non reconnues. Séparez les infos par des « · » ou des tabulations, en commençant par la catégorie." };
+      return { rows, skipped: bad };
+    }
+    if(lines.length < 2) return { error:"Ajoutez au moins une ligne de produit sous l'en-tête." };
     const delim = lines[0].includes('\t') ? '\t' : (lines[0].includes(';') ? ';' : ',');
     const cells = lines.map(l=>l.split(delim));
     const H = cells[0].map(impSquash);
@@ -752,14 +866,7 @@
       const row = cells[r];
       const get = i => (i>=0 && i<row.length) ? (row[i]||'').trim() : '';
       const nom = get(ci.nom); if(!nom) continue;
-      const name = composeName(get(ci.marque), nom, get(ci.cond));
-      const priceRaw = get(ci.prix).replace(',','.').replace(/[^0-9.]/g,'');
-      const price = priceRaw ? Math.max(0, parseFloat(priceRaw)||0) : 0;
-      const qtyRaw = get(ci.qty).replace(/[^0-9]/g,'');
-      const qty = qtyRaw ? parseInt(qtyRaw,10) : 0;
-      const unit = get(ci.unit) || 'À la pièce';
-      const category = get(ci.cat) || 'Divers';
-      rows.push({ name, category, price, unit, qty, visible:true, color:'#EFE2CC' });
+      rows.push(toProduct({ category:get(ci.cat), marque:get(ci.marque), nom, cond:get(ci.cond), prix:get(ci.prix), unit:get(ci.unit), qty:get(ci.qty) }));
     }
     if(!rows.length) return { error:"Aucune ligne de produit valide détectée." };
     return { rows };
@@ -772,10 +879,11 @@
     if(res.error){ box.innerHTML = `<div class="import-msg err">⚠️ ${res.error}</div>`; btn.disabled = true; _importRows = null; return; }
     _importRows = res.rows;
     const head = '<tr><th>Nom (final)</th><th>Catégorie</th><th>Prix</th><th>Unité</th><th>Qté</th></tr>';
-    const body = res.rows.slice(0,8).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.category)}</td><td>${r.price?eur(r.price):'-'}</td><td>${esc(r.unit)}</td><td>${r.qty}</td></tr>`).join('');
-    box.innerHTML = `<div class="import-msg ok">✅ ${res.rows.length} produit(s) prêt(s). Aperçu :</div>
+    const body = res.rows.slice(0,20).map(r=>`<tr><td>${esc(r.name)}</td><td>${esc(r.category)}</td><td>${r.price?eur(r.price):'-'}</td><td>${esc(r.unit)}</td><td>${r.qty}</td></tr>`).join('');
+    const skip = res.skipped && res.skipped.length ? `<div class="import-msg err">Ligne(s) ignorée(s), non reconnue(s) : ${res.skipped.join(', ')}</div>` : '';
+    box.innerHTML = skip + `<div class="import-msg ok">✅ ${res.rows.length} produit(s) prêt(s). Vérifiez l'aperçu avant d'importer :</div>
       <div class="import-table-wrap"><table class="import-table">${head}${body}</table>
-      ${res.rows.length>8?`<p class="import-more">… et ${res.rows.length-8} autre(s).</p>`:''}</div>`;
+      ${res.rows.length>20?`<p class="import-more">… et ${res.rows.length-20} autre(s).</p>`:''}</div>`;
     btn.disabled = false;
   }
   async function runImport(){
@@ -792,7 +900,7 @@
     _importRows = null;
     await loadProducts();
     toast();
-    alert(rows.length + ' produit(s) importé(s) ✅');
+    alert(rows.length + ' produit(s) importé(s).');
   }
 
   /* ---------- ÉCRITURE (sauvegarde en base) ---------- */
@@ -818,8 +926,7 @@
   }
 
   // Bouton "retour en haut"
-  const boTop = document.getElementById('boTop');
-  window.addEventListener('scroll', ()=>{ boTop.classList.toggle('show', window.scrollY > 320); });
+  window.addEventListener('scroll', ()=>{ const boTop = document.getElementById('boTop'); if(boTop) boTop.classList.toggle('show', window.scrollY > 320); });
 
   checkSession();
 
